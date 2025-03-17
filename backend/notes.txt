@@ -1,0 +1,15 @@
+Users
+
+Trips
+- create
+- read
+- updating
+- deleting
+
+CRUD operatinig
+
+get
+post
+delete
+put
+
