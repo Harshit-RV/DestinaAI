@@ -1,10 +1,34 @@
 import { useState, useEffect, useRef } from "react";
 import mapSvg from "../assets/map.svg";
+import axios from 'axios'
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
 
 function Home() {
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const dialogRef = useRef<HTMLDivElement | null>(null);
+
+  const createTravelplan = async () => {
+    try {
+      const response = await axios.post('http://localhost:3000/travelplan/create', {
+        destination: 'New York',
+        startDate: '2022-01-01',
+        endDate: '2022-01-10',
+        note: 'This is a note'
+      })
+      console.log(response)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const getTravellan = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/travelplan/list')
+      console.log(response)
+    } catch (error) {
+      console.error(error)
+    }
+  }
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -50,6 +74,10 @@ function Home() {
         </div>
       </div>
       <div className="bg-white rounded-3xl w-full p-10 my-10 mr-10 flex-col flex gap-5 items-center">
+        
+        <button onClick={createTravelplan}> click me to create </button>
+        <button onClick={getTravellan}> click me to get</button>
+        
         <div className="flex mb-4 justify-between w-full items-center">
           <h1 className="text-7xl font-black">LET'S TRAVEL</h1>
           <button>
