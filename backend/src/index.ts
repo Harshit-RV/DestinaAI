@@ -2,6 +2,13 @@ import express from 'express';
 import travelplanRoute from './routes/travelplan.route';
 import userRoute from './routes/users.route';
 import cors from 'cors';
+
+import { createClient } from '@supabase/supabase-js'
+import config from './config';
+
+// Create a single supabase client for interacting with your database
+const supabase = createClient(config.supabaseUrl, config.supabaseApiKey)
+
 const app = express();
 
 app.use(express.json());
