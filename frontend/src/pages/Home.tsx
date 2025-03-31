@@ -1,34 +1,48 @@
 import { useState, useEffect, useRef } from "react";
+import debounce from "lodash.debounce";
 import mapSvg from "../assets/map.svg";
 import axios from 'axios'
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
+import TextInput from 'react-autocomplete-input';
+import 'react-autocomplete-input/dist/bundle.css';
+import { DatePicker } from "@/components/ui/datepicker";
+
+
+// we fetch apt time for visit to the selected location
+
+// users can either select that range or put in their own
+
+
+// based on date Range, we suggest proper clothes and weather info
 
 function Home() {
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const dialogRef = useRef<HTMLDivElement | null>(null);
 
-  const createTravelplan = async () => {
-    try {
-      const response = await axios.post('http://localhost:3000/travelplan/create', {
-        destination: 'New York',
-        startDate: '2022-01-01',
-        endDate: '2022-01-10',
-        note: 'This is a note'
-      })
-      console.log(response)
-    } catch (error) {
-      console.error(error)
-    }
-  }
+  const [ completions, setCompletions ] = useState<string[]>([]);
 
-  const getTravellan = async () => {
-    try {
-      const response = await axios.get('http://localhost:3000/travelplan/list')
-      console.log(response)
-    } catch (error) {
-      console.error(error)
-    }
-  }
+  // const createTravelplan = async () => {
+  //   try {
+  //     const response = await axios.post('http://localhost:3000/travelplan/create', {
+  //       destination: 'New York',
+  //       startDate: '2022-01-01',
+  //       endDate: '2022-01-10',
+  //       note: 'This is a note'
+  //     })
+  //     console.log(response)
+  //   } catch (error) {
+  //     console.error(error)
+  //   }
+  // }
+
+  // const getTravellan = async () => {
+  //   try {
+  //     const response = await axios.get('http://localhost:3000/travelplan/list')
+  //     console.log(response)
+  //   } catch (error) {
+  //     console.error(error)
+  //   }
+  // }
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -48,6 +62,13 @@ function Home() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isSearchExpanded]);
+
+  const getResults = async (query: string | null) => {
+    const data = await axios.get(`https://vfskrvh2-3000.inc1.devtunnels.ms/travelplan/search?keyword=${query}`);
+    data.data.map((item: { canonical_name: string; }) => {
+      setCompletions((prev) => [...prev, item.canonical_name]);
+    })
+  }
 
   return (
     <div className="h-screen flex w-full bg-[#F6F6F6]">
@@ -74,32 +95,27 @@ function Home() {
         </div>
       </div>
       <div className="bg-white rounded-3xl w-full p-10 my-10 mr-10 flex-col flex gap-5 items-center">
-        
-        <button onClick={createTravelplan}> click me to create </button>
-        <button onClick={getTravellan}> click me to get</button>
-        
+
+        {/* <CitySelect countryid={} stateid={}/>   */}
+       
+        {/* <LanguageSelect countryid={address.country} onChange={(value) => setAddress({...address, language: value})}/>
+        {/* <StateSelect countryid={address.country} onChange={(value) => setAddress({...address, state: value})}/>
+        <CitySelect countryid={address.country} stateid={address.state} onChange={(value) => setAddress({...address, city: value})}/> */}
         <div className="flex mb-4 justify-between w-full items-center">
+          
           <h1 className="text-7xl font-black">LET'S TRAVEL</h1>
           <button>
-            <h2 className="bg-gray-200 p-3 rounded text-2xl font-black transform overflow-hidden rounded-lg text-left hover:shadow-xl transition-all sm:w-full sm:max-w-lg">
+            <h2 className="bg-gray-200 p-3 text-2xl font-black transform overflow-hidden rounded-lg text-left hover:shadow-xl transition-all sm:w-full sm:max-w-lg">
               User Profile
             </h2>
           </button>
         </div>
-        <SignedIn>
-          <div>
-            signed in
-          </div>
-        </SignedIn>
-        <SignedOut><div>
-          signed out
-        </div></SignedOut>
         
 
         {!isSearchExpanded ? (
           <div
             onClick={() => setIsSearchExpanded(true)}
-            className="min-h-20 text-xl font-semibold tracking-wider text-gray-600 flex items-center px-10 rounded-full w-full max-w-[750px] border bg-gray-200"
+            className="min-h-20 text-xl hover:cursor-pointer font-semibold tracking-wider text-gray-600 flex items-center px-10 rounded-full w-full max-w-[750px] border bg-gray-200"
           >
             Start planning your dream trip
           </div>
@@ -113,11 +129,17 @@ function Home() {
               ref={dialogRef}
               className="z-10 flex flex-col gap-4 w-[750px] relative"
             >
-              <input
-                onClick={() => setIsSearchExpanded(true)}
-                className="h-20 p-10 rounded-3xl w-full max-w-[750px] border bg-gray-200"
-              ></input>
-              <div className="w-full h-96 bg-white rounded-3xl"></div>
+              <TextInput 
+                onChange={debounce((e) => getResults(e as unknown as string), 300)}
+                onClick={() => setIsSearchExpanded(true)} trigger={[""]} 
+                options={{"": completions}}
+                autoFocus
+                placeholder="Search for a destination"
+                className="h-20 bg-gray-200 rounded-full w-full max-w-[750px] border px-10 py-6 font-bold text-xl"
+              />
+              <div className="w-full h-96 p-10 bg-white rounded-3xl">
+                <DatePicker ref={dialogRef}/>
+              </div>
               <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
                 <button
                   type="button"
