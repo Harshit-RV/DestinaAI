@@ -8,6 +8,7 @@ import { DatePicker } from "@/components/ui/datepicker";
 import { Button } from "@/components/ui/button";
 import ReactSlider from 'react-slider'
 import { LayoutDiv } from "@/App";
+import { Calendar } from "@/components/ui/calendar";
 
 
 function Home() {
@@ -87,8 +88,16 @@ function Home() {
             User Profile
           </h2>
         </button>
-      </div>
-       
+      </div> 
+       <Calendar
+          mode="single"
+          // selected={Date()}
+          onSelect={(date: unknown) => {
+            if (date) {
+              console.log(date);
+            }
+          }}
+        />
       
 
       {!isSearchExpanded ? (
