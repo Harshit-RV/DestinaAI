@@ -11,13 +11,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-export function DatePicker({ ref }: { ref: React.Ref<HTMLDivElement> }) { 
+export function DatePicker({ ref, calendarPopoverRef }: { calendarPopoverRef:  React.Ref<HTMLDivElement | null>, ref: React.Ref<HTMLButtonElement | null> }) { 
   const [date, setDate] = React.useState<Date>()
 
   return (
-    <div ref={ref}>
     <Popover>
-      <PopoverTrigger ref={ref as unknown as React.Ref<HTMLButtonElement>}>
+      <PopoverTrigger ref={ref}>
         <Button
           variant={"outline"}
           className={cn(
@@ -29,7 +28,7 @@ export function DatePicker({ ref }: { ref: React.Ref<HTMLDivElement> }) {
           {date ? format(date, "PPP") : <span>Pick a date</span>}
         </Button>
       </PopoverTrigger>
-      <PopoverContent ref={ref} className="w-auto p-0">
+      <PopoverContent ref={calendarPopoverRef} className="w-auto p-0">
         <Calendar
           mode="single"
           selected={date}
@@ -38,6 +37,5 @@ export function DatePicker({ ref }: { ref: React.Ref<HTMLDivElement> }) {
         />
       </PopoverContent>
     </Popover>
-    </div>
   )
 }
