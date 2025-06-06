@@ -35,7 +35,7 @@ app.get('/flights2'  , async (req, res) => {
     const data = await axios.get(`https://test.api.amadeus.com/v1/reference-data/locations`, {
       params: { subType: 'AIRPORT', keyword: 'dxb', sort: 'analytics.travelers.score', view: 'FULL' },
       headers: {
-        Authorization: `Bearer ZQ6GRVGYACrKtlA6YqRgUCioMpeG`,
+        Authorization: ``,
       },
     }
     

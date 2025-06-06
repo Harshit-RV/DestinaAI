@@ -14,7 +14,7 @@ const openai = new OpenAI({
   apiKey: config.openAiApiKey,
 });
 
-const prompt = "You are a travel agent that makes itneraries that are enjoyable, budget friendly and fun at the same time. You'll be given start date, end date, location, budget, interets. The plans should fit into the dates provided including any holdiays or festivals occurring in the desired loaction at that time. Make sure to consider the kind of weather the given location will have based on the dates provided"
+const prompt = "You are a travel agent that makes itneraries that are enjoyable, budget friendly and fun at the same time. You'll be given start date, end date, location, budget, interets. The plans should fit into the dates provided including any holdiays or festivals occurring in the desired loaction at that time. Make sure to consider the kind of weather the given location will have based on the dates provided."
 
 export async function getResponseFromOpenAI(props: OpenAIResponseProps) {
   try {
