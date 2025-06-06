@@ -4,7 +4,7 @@ import mapSvg from "../assets/map.svg";
 import axios from 'axios'
 import TextInput from 'react-autocomplete-input';
 import 'react-autocomplete-input/dist/bundle.css';
-import { DatePicker } from "@/components/ui/datepicker";
+// import { DatePicker } from "@/components/ui/datepicker";
 import { Button } from "@/components/ui/button";
 import ReactSlider from 'react-slider'
 import { LayoutDiv } from "@/App";
@@ -143,11 +143,11 @@ function Home() {
               <div className="flex gap-10">
                 <div className="flex flex-col gap-2">
                   <div className="text-gray-400 text-sm font-bold">FROM</div>
-                  <DatePicker ref={calendarRef} calendarPopoverRef={calendarPopoverRef}/>
+                  {/* <DatePicker ref={calendarRef} calendarPopoverRef={calendarPopoverRef}/> */}
                 </div>
                 <div className="flex flex-col gap-2">
                   <div className="text-gray-400 text-sm font-bold">TO</div>
-                  <DatePicker ref={calendarRef} calendarPopoverRef={calendarPopoverRef}/>
+                  {/* <DatePicker ref={calendarRef} calendarPopoverRef={calendarPopoverRef}/> */}
                 </div>
               </div>
               
@@ -185,6 +185,7 @@ function Home() {
                   // pearling
                   onAfterChange={(value) => {  
                     var newBudget = [...value];
+                    console.log(budget);
                     setBudget(newBudget);
                   }}
                   minDistance={100}

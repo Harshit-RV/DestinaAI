@@ -150,21 +150,5 @@ const HotelBox = ({ id, selectedIndex, onClick } : { id: number, selectedIndex: 
 
 
 
-const NavBarItem = ({ title }: { title: string }) => {
-  return (
-    <div className="bg-white w-full rounded-lg border-2 px-3 py-2 border-gray-200 font-normal m-0">
-      {title}
-    </div>
-  );
-};
-
-const Graybox = () => {
-  return (
-    <div className="bg-[#F6F6F6] h-32 w-full border border-gray-200 hover:shadow-2xl hover:rounded-3xl transition duration-1000"></div>
-  );
-};
-
-
-
 export default ChooseHotel;
 
