@@ -9,6 +9,9 @@ import { cn } from "./lib/utils";
 import { type ClassValue } from "clsx"
 import { SignedIn, SignedOut } from "@clerk/clerk-react";
 
+export const API_URL = "http://localhost:3000";
+// export const API_URL = "https://vfskrvh2-3000.inc1.devtunnels.ms";
+
 function App() {
   return (
     <div className="h-screen flex w-full bg-[#F6F6F6]">
