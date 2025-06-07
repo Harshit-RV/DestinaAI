@@ -966,6 +966,11 @@ send@0.19.0:
     range-parser "~1.2.1"
     statuses "2.0.1"
 
+serpapi@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/serpapi/-/serpapi-2.1.0.tgz#ff7b7926f93e4c0f23c63d0dce639bf7c4875d8b"
+  integrity sha512-iXydBe7yLEwSYlHUNG9QRlZfFxtbxpQ0kZf7HDmRC4vbzhUzBW9rU+zOw2K6bcA2D6/qTCXivtCB/hnZJFZNTQ==
+
 serve-static@1.16.2:
   version "1.16.2"
   resolved "https://registry.yarnpkg.com/serve-static/-/serve-static-1.16.2.tgz#b6a5343da47f6bdd2673848bf45754941e803296"

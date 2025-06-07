@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import axios from 'axios';
 import config from '../config';
+import { getFlightsData, getHotelsData } from '../utils/getDataFromSerp';
 const app = Router();
 
 interface TravelPlan {
@@ -23,30 +24,41 @@ app.get('/search', async (req, res) => {
 });
 
 app.get('/flights'  , async (req, res) => {
-  const { destination, starting, endDate, starting_date, return_date } = req.query;
-  const data = await axios.get(`https://serpapi.com/search.json?engine=google_flights&departure_id=${starting}&arrival_id=${destination}&gl=us&hl=en&currency=USD&outbound_date=${starting_date}&return_date=${return_date}&api_key=${config.serpApiKey}`);
-  res.send(data.data);
+  const { departureAirportId, arrivalAirportId, departureDate, returnDate } = req.query as { departureAirportId: string, arrivalAirportId: string, departureDate: string, returnDate: string };
+
+  // const flightsData = await getFlightsData({
+  //   departureAirportId,
+  //   arrivalAirportId,
+  //   departureDate,
+  //   returnDate,
+  // });
+  const flightsData = await getFlightsData({
+    departureAirportId: "CDG, ORY",
+    arrivalAirportId: "JFK, EWR",
+    departureDate: "2025-06-11",
+    returnDate: "2025-06-14",
+  });
+
+  res.send(flightsData);
 });
 
-app.get('/flights2'  , async (req, res) => {
-  try {
-    console.log(config.amadeusApiKey);
-    const { destination, starting, endDate, starting_date, return_date } = req.query;
-    const data = await axios.get(`https://test.api.amadeus.com/v1/reference-data/locations`, {
-      params: { subType: 'AIRPORT', keyword: 'dxb', sort: 'analytics.travelers.score', view: 'FULL' },
-      headers: {
-        Authorization: ``,
-      },
-    }
-    
-    );
-    res.send(data.data);
-  } catch (error) {
-    // console.error('Error fetching flight data:', error);
-    res.status(500).json(error);
-  }
-});
+app.get('/hotels'  , async (req, res) => {
+  const { departureAirportId, arrivalAirportId, departureDate, returnDate } = req.query as { departureAirportId: string, arrivalAirportId: string, departureDate: string, returnDate: string };
 
+  // const flightsData = await getFlightsData({
+  //   departureAirportId,
+  //   arrivalAirportId,
+  //   departureDate,
+  //   returnDate,
+  // });
+  const flightsData = await getHotelsData({
+    q: "pet friendly hotels in dubai",
+    departureDate: "2025-06-11",
+    returnDate: "2025-06-14",
+  });
+
+  res.send(flightsData);
+});
 
 
 app.post('/generate', async (req, res) => {

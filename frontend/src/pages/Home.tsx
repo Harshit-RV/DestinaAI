@@ -19,6 +19,9 @@ function Home() {
   const [ hotelPref, setHotelPref ] = useState<string[]>([]);
   const [ interests, setInterests ] = useState<string[]>([]);
   const [ budget, setBudget ] = useState<Record<number, number>>([1000, 2000]);
+
+  const [adults, setAdults] = useState<number>(1);
+  const [children, setChildren] = useState<number>(0);
   
   // Date state management
   const [fromDate, setFromDate] = useState<string>("");
@@ -160,7 +163,7 @@ function Home() {
                     trigger={[""]} 
                     options={{"": currentLocationCompletions}}
                     placeholder="Your location"
-                    className="h-12 rounded-lg bg-gray-50 border border-gray-300 flex py-2 px-4 font-semibold text-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="h-10 rounded-lg bg-gray-50 border border-gray-300 flex py-2 px-4 font-semibold text-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
@@ -168,16 +171,63 @@ function Home() {
                 <div className="flex gap-8 mb-6">
                   <div className="flex flex-col gap-2 flex-1 relative">
                     <div className="text-gray-400 text-sm font-bold">FROM {fromDate}</div>
-                    <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="h-12 rounded-lg bg-gray-50 border border-gray-300 flex items-center px-4 font-semibold text-md text-gray-700 hover:bg-gray-100 transition-colors text-left" />
+                    <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="h-8 rounded-lg bg-gray-50 border border-gray-300 flex items-center px-4 font-semibold text-md text-gray-700 hover:bg-gray-100 transition-colors text-left" />
                   </div>
                   <div className="flex flex-col gap-2 flex-1 relative">
                     <div className="text-gray-400 text-sm font-bold">TO</div>
-                    <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="h-12 rounded-lg bg-gray-50 border border-gray-300 flex items-center px-4 font-semibold text-md text-gray-700 hover:bg-gray-100 transition-colors text-left" />
+                    <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="h-8 rounded-lg bg-gray-50 border border-gray-300 flex items-center px-4 font-semibold text-md text-gray-700 hover:bg-gray-100 transition-colors text-left" />
+                  </div>
+                </div>
+
+                {/* Travelers Counter */}
+                <div className="flex flex-col gap-3 mb-6">
+                  <div className="flex gap-6">
+                    <div className="flex-1 flex flex-col gap-2">
+                      <div className="text-sm text-gray-600">Adults</div>
+                      <div className="flex items-center h-9 rounded-lg bg-gray-50 border border-gray-300">
+                        <button 
+                          onClick={() => setAdults(prev => Math.max(1, prev - 1))}
+                          className="w-12 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-l-lg"
+                        >
+                          -
+                        </button>
+                        <div className="flex-1 flex items-center justify-center font-semibold">
+                          {adults}
+                        </div>
+                        <button
+                          onClick={() => setAdults(prev => prev + 1)} 
+                          className="w-12 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-r-lg"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex-1 flex flex-col gap-2">
+                      <div className="text-sm text-gray-600">Children</div>
+                      <div className="flex items-center h-9 rounded-lg bg-gray-50 border border-gray-300">
+                        <button
+                          onClick={() => setChildren(prev => Math.max(0, prev - 1))}
+                          className="w-12 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-l-lg"
+                        >
+                          -
+                        </button>
+                        <div className="flex-1 flex items-center justify-center font-semibold">
+                          {children}
+                        </div>
+                        <button
+                          onClick={() => setChildren(prev => prev + 1)}
+                          className="w-12 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-r-lg"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 
                 {/* Hotel Preferences */}
-                <div className="flex flex-col gap-3 mb-6">
+                <div className="flex flex-col gap-1 mb-6">
                   <div className="font-bold text-sm text-gray-400">HOTEL PREFERENCE</div>
                   <div className="flex flex-wrap gap-2">
                     <PreferenceBox title="Luxury" selected={hotelPref.includes("Luxury")} addItem={addHotelPref} />
@@ -188,7 +238,7 @@ function Home() {
                 </div>
 
                 {/* Interests */}
-                <div className="flex flex-col gap-3 mb-6">
+                <div className="flex flex-col gap-1 mb-6">
                   <div className="font-bold text-sm text-gray-400">INTERESTS</div>
                   <div className="flex flex-wrap gap-2">
                     <PreferenceBox title="Adventure" selected={interests.includes("Adventure")} addItem={addInterest} />
