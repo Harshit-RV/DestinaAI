@@ -1,12 +1,14 @@
-import { API_URL, LayoutDiv } from "@/App";
+import { API_URL } from "@/App";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-
+import LayoutDiv from "@/components/layout-div";
 interface Airport {
   name: string;
   id: string;
   time: string;
 }
+
+
 
 interface Flight {
   departure_airport: Airport;

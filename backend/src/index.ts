@@ -1,6 +1,7 @@
 import express from 'express';
 import travelplanRoute from './routes/travelplan.route';
 import userRoute from './routes/users.route';
+import utilRoute from './routes/util.route';
 import cors from 'cors';
 
 import { createClient } from '@supabase/supabase-js'
@@ -20,6 +21,7 @@ app.get('/', (req, res) => {
 
 app.use('/travelplan', travelplanRoute);
 app.use('/users', userRoute);
+app.use('/util', utilRoute);
 
 app.listen(3000, () => {
   console.log('Server is running on port 3000');

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import axios from 'axios';
 import config from '../config';
-import { getFlightsData, getHotelsData } from '../utils/getDataFromSerp';
+import { getFlightsData, getHotelsData, getReturnFlightsData } from '../utils/getDataFromSerp';
 const app = Router();
 
 interface TravelPlan {
@@ -26,17 +26,31 @@ app.get('/search', async (req, res) => {
 app.get('/flights'  , async (req, res) => {
   const { departureAirportId, arrivalAirportId, departureDate, returnDate } = req.query as { departureAirportId: string, arrivalAirportId: string, departureDate: string, returnDate: string };
 
-  // const flightsData = await getFlightsData({
-  //   departureAirportId,
-  //   arrivalAirportId,
-  //   departureDate,
-  //   returnDate,
-  // });
   const flightsData = await getFlightsData({
-    departureAirportId: "CDG, ORY",
+    departureAirportId,
+    arrivalAirportId,
+    departureDate,
+    returnDate,
+  });
+  // const flightsData = await getFlightsData({
+  //   departureAirportId: "CDG, ORY",
+  //   arrivalAirportId: "JFK, EWR",
+  //   departureDate: "2025-06-13",
+  //   returnDate: "2025-06-20",
+  // });
+
+  res.send(flightsData);
+});
+
+app.get('/return-flights'  , async (req, res) => {
+  const { departureToken } = req.query as { departureToken: string };
+
+  const flightsData = await getReturnFlightsData({
+    departureToken: departureToken,
     arrivalAirportId: "JFK, EWR",
-    departureDate: "2025-06-11",
-    returnDate: "2025-06-14",
+    departureAirportId: "CDG, ORY",
+    returnDate: "2025-06-20",
+    outboundDate: "2025-06-13",
   });
 
   res.send(flightsData);

@@ -1,8 +1,9 @@
-import { LayoutDiv } from "@/App";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectGroup, SelectLabel, SelectItem, SelectContent } from "@/components/ui/select";
 import { useState } from "react";
 import { Input } from "@/components/ui/input"
+// import { useTripPlanner } from "@/contexts/TripPlannerContext";
+import { useNavigate } from "react-router-dom";
 import {
   Sheet,
   SheetClose,
@@ -13,9 +14,18 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import LayoutDiv from "@/components/layout-div";
 
 function ChooseHotel() {
-  const [ selectedFlight, setSelectedFlight ] = useState<number>(0);
+  const navigate = useNavigate();
+  // const { selectedHotel, setSelectedHotel } = useTripPlanner();
+  const [selectedHotelIndex, setSelectedHotelIndex] = useState<number>(0);
+
+  const handleContinue = () => {
+    // Here you would typically save the selected hotel to your backend
+    // For now, we'll just navigate to a summary page
+    navigate('/trip-summary');
+  };
 
   return (
     <LayoutDiv>
@@ -27,9 +37,9 @@ function ChooseHotel() {
           </SheetTrigger>
           <SheetContent>
             <SheetHeader>
-              <SheetTitle>Edit profile</SheetTitle>
+              <SheetTitle>Hotel Filters</SheetTitle>
               <SheetDescription>
-                Make changes to your profile here. Click save when you&apos;re done.
+                Filter hotels based on your preferences
               </SheetDescription>
             </SheetHeader>
             <div className="grid flex-1 auto-rows-min gap-6 px-4">
@@ -87,22 +97,28 @@ function ChooseHotel() {
             </SheetFooter>
           </SheetContent>
         </Sheet>
-        
       </div>
       
       <div className="border w-full overflow-scroll overflow-x-hidden">
-        <HotelBox id={1} selectedIndex={selectedFlight} onClick={() => setSelectedFlight(1)}/>
-        <HotelBox id={2} selectedIndex={selectedFlight} onClick={() => setSelectedFlight(2)}/>
-        <HotelBox id={3} selectedIndex={selectedFlight} onClick={() => setSelectedFlight(3)}/>
-        <HotelBox id={4} selectedIndex={selectedFlight} onClick={() => setSelectedFlight(4)}/>
-        <HotelBox id={5} selectedIndex={selectedFlight} onClick={() => setSelectedFlight(5)}/>
-        <HotelBox id={6} selectedIndex={selectedFlight} onClick={() => setSelectedFlight(6)}/>
-        <HotelBox id={7} selectedIndex={selectedFlight} onClick={() => setSelectedFlight(7)}/>
-        <HotelBox id={8} selectedIndex={selectedFlight} onClick={() => setSelectedFlight(8)}/>
+        <HotelBox id={1} selectedIndex={selectedHotelIndex} onClick={() => setSelectedHotelIndex(1)}/>
+        <HotelBox id={2} selectedIndex={selectedHotelIndex} onClick={() => setSelectedHotelIndex(2)}/>
+        <HotelBox id={3} selectedIndex={selectedHotelIndex} onClick={() => setSelectedHotelIndex(3)}/>
+        <HotelBox id={4} selectedIndex={selectedHotelIndex} onClick={() => setSelectedHotelIndex(4)}/>
+        <HotelBox id={5} selectedIndex={selectedHotelIndex} onClick={() => setSelectedHotelIndex(5)}/>
+        <HotelBox id={6} selectedIndex={selectedHotelIndex} onClick={() => setSelectedHotelIndex(6)}/>
+        <HotelBox id={7} selectedIndex={selectedHotelIndex} onClick={() => setSelectedHotelIndex(7)}/>
+        <HotelBox id={8} selectedIndex={selectedHotelIndex} onClick={() => setSelectedHotelIndex(8)}/>
       </div>
 
       <div className="flex justify-end w-full">
-        <Button size={'lg'} className="w-40" disabled={selectedFlight==0}>Continue</Button>
+        <Button 
+          size={'lg'} 
+          className="w-40" 
+          disabled={selectedHotelIndex === 0}
+          onClick={handleContinue}
+        >
+          Continue
+        </Button>
       </div>
     </LayoutDiv>
   );

@@ -6,62 +6,91 @@ import 'react-autocomplete-input/dist/bundle.css';
 // import { DatePicker } from "@/components/ui/datepicker";
 import { Button } from "@/components/ui/button";
 import ReactSlider from 'react-slider'
-import { API_URL, LayoutDiv } from "@/App";
+import { API_URL } from "@/App";
+import { useTripPlanner } from "@/contexts/TripPlannerContext";
+import { useNavigate } from "react-router-dom";
+import GrayBox from "@/components/gray-box";
+import PreferenceBox from "@/components/preference-box";
+import LayoutDiv from "@/components/layout-div";
 
 
 function Home() {
+  const navigate = useNavigate();
+  const {
+    departureLocation,
+    arrivalLocation,
+    departureDate,
+    returnDate,
+    numberOfAdults,
+    numberOfChildren,
+    hotelPreferences,
+    interests,
+    minimumBudget,
+    maximumBudget,
+    setDepartureLocation,
+    setArrivalLocation,
+    setDepartureDate,
+    setReturnDate,
+    setNumberOfAdults,
+    setNumberOfChildren,
+    setHotelPreferences,
+    setInterests,
+    setMinimumBudget,
+    setMaximumBudget,
+    setDepartureAirportCode,
+    setArrivalAirportCode,
+  } = useTripPlanner();
+
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement | null>(null);
 
   const [ completions, setCompletions ] = useState<string[]>([]);
   const [ currentLocationCompletions, setCurrentLocationCompletions ] = useState<string[]>([]);
 
-  const [ hotelPref, setHotelPref ] = useState<string[]>([]);
-  const [ interests, setInterests ] = useState<string[]>([]);
-  const [ budget, setBudget ] = useState<Record<number, number>>([1000, 2000]);
-
-  const [adults, setAdults] = useState<number>(1);
-  const [children, setChildren] = useState<number>(0);
-  
-  // Date state management
-  const [fromDate, setFromDate] = useState<string>("");
-  const [toDate, setToDate] = useState<string>("");
-
-  const [destination, setDestination] = useState<string>("");
-  const [currentLocation, setCurrentLocation] = useState<string>("");
-
   const generatePlan = async () => {
-    if (destination === "" || currentLocation === "" || fromDate === "" || toDate === "") {
+    if (arrivalLocation === "" || departureLocation === "" || departureDate === "" || returnDate === "") {
       alert("Please fill in all fields");
       return;
     }
 
-    console.log({destination, currentLocation, fromDate, toDate, hotelPref, interests, budget});
-    // const data = await axios.post(`${API_URL}/travelplan/generate`, {
-    //   destination,
-    //   currentLocation,
-    //   fromDate,
-    //   toDate,
-    //   hotelPref,
-    //   interests,
-    //   budget,
-    // });
-    // console.log(data);
+    try {
+      // Get airport codes from GPT
+      const response = await axios.get(`${API_URL}/util/get-airport-codes`, {
+        params: {
+          departureCityName: departureLocation,
+          arrivalCityName: arrivalLocation
+        }
+      });
+
+      console.log(response);
+
+      const { departureCodes, arrivalCodes } = response.data.parsed;
+      console.log({departureCodes, arrivalCodes});
+
+      setDepartureAirportCode(departureCodes);
+      setArrivalAirportCode(arrivalCodes);
+
+      // Navigate to flight selection
+      navigate('/choose-flight');
+    } catch (error) {
+      console.error('Error getting airport codes:', error);
+      alert('Error getting airport codes. Please try again.');
+    }
   }
 
   const handleDestinationChange = (e: string) => {
     getResults(e as unknown as string);
-    setDestination(e);
+    setArrivalLocation(e);
   }
 
   const handleCurrentLocationChange = (e: string) => {
     getResultsForCurrentLocation(e as unknown as string);
-    setCurrentLocation(e);
+    setDepartureLocation(e);
   }
 
 
   const addHotelPref = (pref: string) => {
-    setHotelPref((prev) => {
+    setHotelPreferences((prev) => {
       if (prev.includes(pref)) {
         return prev.filter((item) => item !== pref);
       } else {
@@ -170,12 +199,12 @@ function Home() {
                 {/* Date Selection */}
                 <div className="flex gap-8 mb-6">
                   <div className="flex flex-col gap-2 flex-1 relative">
-                    <div className="text-gray-400 text-sm font-bold">FROM {fromDate}</div>
-                    <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="h-8 rounded-lg bg-gray-50 border border-gray-300 flex items-center px-4 font-semibold text-md text-gray-700 hover:bg-gray-100 transition-colors text-left" />
+                    <div className="text-gray-400 text-sm font-bold">FROM {departureDate}</div>
+                    <input type="date" value={departureDate} onChange={(e) => setDepartureDate(e.target.value)} className="h-8 rounded-lg bg-gray-50 border border-gray-300 flex items-center px-4 font-semibold text-md text-gray-700 hover:bg-gray-100 transition-colors text-left" />
                   </div>
                   <div className="flex flex-col gap-2 flex-1 relative">
                     <div className="text-gray-400 text-sm font-bold">TO</div>
-                    <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="h-8 rounded-lg bg-gray-50 border border-gray-300 flex items-center px-4 font-semibold text-md text-gray-700 hover:bg-gray-100 transition-colors text-left" />
+                    <input type="date" value={returnDate} onChange={(e) => setReturnDate(e.target.value)} className="h-8 rounded-lg bg-gray-50 border border-gray-300 flex items-center px-4 font-semibold text-md text-gray-700 hover:bg-gray-100 transition-colors text-left" />
                   </div>
                 </div>
 
@@ -186,16 +215,16 @@ function Home() {
                       <div className="text-sm text-gray-600">Adults</div>
                       <div className="flex items-center h-9 rounded-lg bg-gray-50 border border-gray-300">
                         <button 
-                          onClick={() => setAdults(prev => Math.max(1, prev - 1))}
+                          onClick={() => setNumberOfAdults(prev => Math.max(1, prev - 1))}
                           className="w-12 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-l-lg"
                         >
                           -
                         </button>
                         <div className="flex-1 flex items-center justify-center font-semibold">
-                          {adults}
+                          {numberOfAdults}
                         </div>
                         <button
-                          onClick={() => setAdults(prev => prev + 1)} 
+                          onClick={() => setNumberOfAdults(prev => prev + 1)} 
                           className="w-12 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-r-lg"
                         >
                           +
@@ -207,16 +236,16 @@ function Home() {
                       <div className="text-sm text-gray-600">Children</div>
                       <div className="flex items-center h-9 rounded-lg bg-gray-50 border border-gray-300">
                         <button
-                          onClick={() => setChildren(prev => Math.max(0, prev - 1))}
+                          onClick={() => setNumberOfChildren(prev => Math.max(0, prev - 1))}
                           className="w-12 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-l-lg"
                         >
                           -
                         </button>
                         <div className="flex-1 flex items-center justify-center font-semibold">
-                          {children}
+                          {numberOfChildren}
                         </div>
                         <button
-                          onClick={() => setChildren(prev => prev + 1)}
+                          onClick={() => setNumberOfChildren(prev => Math.max(0, prev + 1))}
                           className="w-12 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-r-lg"
                         >
                           +
@@ -230,10 +259,10 @@ function Home() {
                 <div className="flex flex-col gap-1 mb-6">
                   <div className="font-bold text-sm text-gray-400">HOTEL PREFERENCE</div>
                   <div className="flex flex-wrap gap-2">
-                    <PreferenceBox title="Luxury" selected={hotelPref.includes("Luxury")} addItem={addHotelPref} />
-                    <PreferenceBox title="Budget" selected={hotelPref.includes("Budget")} addItem={addHotelPref} />
-                    <PreferenceBox title="Family Friendly" selected={hotelPref.includes("Family Friendly")} addItem={addHotelPref} />
-                    <PreferenceBox title="Pet Friendly" selected={hotelPref.includes("Pet Friendly")} addItem={addHotelPref} />
+                    <PreferenceBox title="Luxury" selected={hotelPreferences.includes("Luxury")} addItem={addHotelPref} />
+                    <PreferenceBox title="Budget" selected={hotelPreferences.includes("Budget")} addItem={addHotelPref} />
+                    <PreferenceBox title="Family Friendly" selected={hotelPreferences.includes("Family Friendly")} addItem={addHotelPref} />
+                    <PreferenceBox title="Pet Friendly" selected={hotelPreferences.includes("Pet Friendly")} addItem={addHotelPref} />
                   </div>
                 </div>
 
@@ -259,12 +288,13 @@ function Home() {
                       trackClassName="h-4"
                       min={100}
                       max={10000}
-                      defaultValue={[1000, 2000]}
+                      defaultValue={[minimumBudget, maximumBudget]}
                       ariaLabel={['Lower thumb', 'Upper thumb']}
                       onAfterChange={(value) => {  
                         const newBudget = [...value];
-                        console.log(budget);
-                        setBudget(newBudget);
+                        console.log(minimumBudget, maximumBudget);
+                        setMinimumBudget(newBudget[0]);
+                        setMaximumBudget(newBudget[1]);
                       }}
                       minDistance={100}
                       renderThumb={(props, {valueNow} : { valueNow: number; }) => {
@@ -298,39 +328,17 @@ function Home() {
       </div>
 
       <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-10 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 ">
-        <Graybox />
-        <Graybox />
-        <Graybox />
-        <Graybox />
-        <Graybox />
-        <Graybox />
+        <GrayBox />
+        <GrayBox />
+        <GrayBox />
+        <GrayBox />
+        <GrayBox />
+        <GrayBox />
       </div>
       <img src={mapSvg} className="w-full h-full"></img>
     </LayoutDiv>
   );
 }
-
-
-const Graybox = () => {
-  return (
-    <div className="bg-[#F6F6F6] h-32 w-full border border-gray-200 hover:shadow-2xl hover:rounded-3xl transition duration-1000"></div>
-  );
-};
-
-const PreferenceBox = ({ title, selected, addItem }: { title: string; selected: boolean; addItem: (item: string) => void }) => {
-  return (
-    <Button 
-      onClick={() => addItem(title)} 
-      variant={'outline'} 
-      size="sm"
-      className={`bg-gray-50 hover:bg-gray-100 border-2 hover:cursor-pointer transition-colors ${selected ? "border-gray-700 bg-gray-200" : "border-gray-300"} `}
-    >
-      {title}
-    </Button>
-  );
-}
-
-
 
 export default Home;
 

@@ -14,6 +14,14 @@ interface HotelsDataProps {
   returnDate: string;
 }
 
+interface ReturnFlightsDataProps {
+  departureToken: string;
+  arrivalAirportId: string;
+  departureAirportId: string;
+  returnDate: string;
+  outboundDate: string;
+}
+
 export async function getFlightsData(props: FlightsDataProps) {
   serpConfig.api_key = config.serpApiKey;
   
@@ -25,6 +33,24 @@ export async function getFlightsData(props: FlightsDataProps) {
     arrival_id: props.arrivalAirportId,
     outbound_date: props.departureDate,
     return_date: props.returnDate,
+    currency: "USD",
+  });
+
+  return response.other_flights;
+}
+
+export async function getReturnFlightsData(props: ReturnFlightsDataProps) {
+  serpConfig.api_key = config.serpApiKey;
+  
+  const response = await getJson({
+    engine: "google_flights",
+    hl: "en",
+    sort_by: "6",
+    departure_token: props.departureToken,
+    arrival_id: props.arrivalAirportId,
+    departure_id: props.departureAirportId,
+    return_date: props.returnDate,
+    outbound_date: props.outboundDate,
     currency: "USD",
   });
 
