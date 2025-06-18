@@ -8,20 +8,6 @@ interface FlightsDataProps {
   returnDate: string;
 }
 
-interface HotelsDataProps {
-  q: string;
-  departureDate: string;
-  returnDate: string;
-}
-
-interface ReturnFlightsDataProps {
-  departureToken: string;
-  arrivalAirportId: string;
-  departureAirportId: string;
-  returnDate: string;
-  outboundDate: string;
-}
-
 export async function getFlightsData(props: FlightsDataProps) {
   serpConfig.api_key = config.serpApiKey;
   
@@ -37,6 +23,15 @@ export async function getFlightsData(props: FlightsDataProps) {
   });
 
   return response.other_flights;
+}
+
+
+interface ReturnFlightsDataProps {
+  departureToken: string;
+  arrivalAirportId: string;
+  departureAirportId: string;
+  returnDate: string;
+  outboundDate: string;
 }
 
 export async function getReturnFlightsData(props: ReturnFlightsDataProps) {
@@ -57,6 +52,11 @@ export async function getReturnFlightsData(props: ReturnFlightsDataProps) {
   return response.other_flights;
 }
 
+interface HotelsDataProps {
+  q: string;
+  departureDate: string;
+  returnDate: string;
+}
 
 export async function getHotelsData(props: HotelsDataProps) {
   serpConfig.api_key = config.serpApiKey;

@@ -49,7 +49,6 @@ function Home() {
 
   const generatePlan = async () => {
     if (arrivalLocation === "" || departureLocation === "" || departureDate === "" || returnDate === "") {
-      alert("Please fill in all fields");
       return;
     }
 
@@ -74,7 +73,6 @@ function Home() {
       navigate('/choose-flight');
     } catch (error) {
       console.error('Error getting airport codes:', error);
-      alert('Error getting airport codes. Please try again.');
     }
   }
 

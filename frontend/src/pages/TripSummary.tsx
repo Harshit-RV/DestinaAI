@@ -162,7 +162,7 @@ function TripSummary() {
           <Button variant="outline" onClick={() => navigate('/')}>
             Start Over
           </Button>
-          <Button onClick={() => alert('Booking confirmed!')}>
+          <Button onClick={() => console.log('Booking confirmed!')}>
             Confirm Booking
           </Button>
         </div>

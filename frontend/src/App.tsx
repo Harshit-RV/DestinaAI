@@ -10,8 +10,8 @@ import { SignedIn, SignedOut } from "@clerk/clerk-react";
 import TripPlanner from "./pages/TripPlanner";
 import NavBarItem from "@/components/navbar-item";
 
-export const API_URL = "http://localhost:3000";
-// export const API_URL = "https://vfskrvh2-3000.inc1.devtunnels.ms";
+// export const API_URL = "http://localhost:3000";
+export const API_URL = "https://z2bt85w1-3000.inc1.devtunnels.ms";
 
 function App() {
   return (
