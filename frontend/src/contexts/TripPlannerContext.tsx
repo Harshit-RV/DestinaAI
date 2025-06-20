@@ -46,10 +46,25 @@ interface TripPlannerContextType {
 const TripPlannerContext = createContext<TripPlannerContextType | undefined>(undefined);
 
 export function TripPlannerProvider({ children }: { children: ReactNode }) {
+  // Set default dates to tomorrow and a week later
+  const getDefaultDates = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const nextWeek = new Date();
+    nextWeek.setDate(nextWeek.getDate() + 8);
+    
+    return {
+      departureDate: tomorrow.toISOString().split('T')[0],
+      returnDate: nextWeek.toISOString().split('T')[0]
+    };
+  };
+
+  const defaultDates = getDefaultDates();
+  
   const [departureLocation, setDepartureLocation] = useState('');
   const [arrivalLocation, setArrivalLocation] = useState('');
-  const [departureDate, setDepartureDate] = useState('2025-06-20');
-  const [returnDate, setReturnDate] = useState('2025-06-27');
+  const [departureDate, setDepartureDate] = useState(defaultDates.departureDate);
+  const [returnDate, setReturnDate] = useState(defaultDates.returnDate);
   const [numberOfAdults, setNumberOfAdults] = useState(1);
   const [numberOfChildren, setNumberOfChildren] = useState(0);
   const [hotelPreferences, setHotelPreferences] = useState<string[]>([]);

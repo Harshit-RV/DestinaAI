@@ -7,7 +7,8 @@ export const getAirportCodesFromCityname = async (departureCityName: string, arr
       departureCodes: z.array(z.string()),
       arrivalCodes: z.array(z.string()),
     }),
-    instruction: "Get the only IATA airport codes for the given city name (only return the 3 letter code of the airport, and only one entry for one aiport). Return the airport code for only the specified city. Return neighbouring cities airports if and only if the city specified has no commercial airport.",
+    instruction: "Return only the 3-letter IATA airport code for the specified city. Do not return any 4-letter ICAO codes. Do not return multiple codes for the same airport. Return only one IATA code per airport. Only include airports located in the specified city. If the specified city does not have a commercial airport, return the nearest city’s commercial airport’s IATA code. Return only the 3-letter IATA code, nothing else — no airport name, no location, no explanation. Do not return any private or non-commercial airports.",
+    // instruction: "Get the only IATA airport codes for the given city name (only return the 3 letter code of the airport, and only one entry for one aiport). Return the airport code for only the specified city. Return neighbouring cities airports if and only if the city specified has no commercial airport.",
     prompt: `Departure city: ${departureCityName}, Arrival city: ${arrivalCityName}`,
   });
   return response;

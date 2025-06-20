@@ -136,7 +136,7 @@ function ChooseFlight({ type = 'outbound' }: { type: "outbound" | "return" }) {
   return (
     <LayoutDiv>
       <div className="flex mb-2 justify-between w-full items-center">
-      <h1 className="text-3xl flex items-baseline gap-2 font-black">Choose Your {type === 'outbound' ? 'Outbound' : 'Return'} Flight <div className="text-gray-400 text-sm font-normal">({flightData.length} results)</div></h1>
+        <h1 className="text-3xl flex items-baseline gap-2 font-black">Choose Your {type === 'outbound' ? 'Outbound' : 'Return'} Flight <div className="text-gray-400 text-sm font-normal">({flightData.length} results)</div></h1>
       </div>
       
       {loading ?  
@@ -216,51 +216,65 @@ const FlightBox = ({ id, selectedIndex, onClick, flightData } : {
   };
 
   return (
-    <div onClick={onClick} className={`hover:cursor-pointer border-b px-10 py-6 ${selectedIndex == id ? "outline-[#28666E] outline-2 bg-blue-50" : ""} m-0.5`}>
+    <div onClick={onClick} className={`hover:cursor-pointer border-b px-4 sm:px-6 md:px-10 py-6 ${selectedIndex == id ? "outline-[#28666E] outline-2 bg-blue-50" : ""} m-0.5`}>
       {/* Main flight info row */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex gap-7">
-          <img className="h-14 w-14 border rounded-full" src={flightData.airline_logo}/>
-          <div className="flex flex-col gap-1">
-            <div className="text-black font-bold text-xl">
-              {formatTime(firstFlight.departure_airport.time)} to {formatTime(lastFlight.arrival_airport.time)}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between w-full gap-4">
+        {/* Left side: logo, times, airline name */}
+        <div className="flex items-center gap-4 w-full md:w-auto">
+          <img className="h-14 w-14 border rounded-full shrink-0" src={flightData.airline_logo}/>
+          <div className="flex flex-col gap-1 w-full">
+            <div className="flex justify-between items-start">
+              <div className="text-black font-bold text-lg md:text-xl">
+                {formatTime(firstFlight.departure_airport.time)} to {formatTime(lastFlight.arrival_airport.time)}
+              </div>
+              <div className="md:hidden text-right">
+                <div className="text-gray-700 font-bold text-lg">${flightData.price}</div>
+                {!isConnecting && <div className="text-green-600 text-sm font-medium">Non-Stop</div>}
+                {isConnecting && flightData.layovers && <div className="text-orange-600 text-sm font-medium">{flightData.layovers.length} stop{flightData.layovers.length > 1 ? 's' : ''}</div>}
+              </div>
             </div>
             <div className="text-gray-500 text-sm">
               {isConnecting ? `${flightData.flights.length} flights` : firstFlight.airline} • {flightData.flights.map(f => f.flight_number).join(', ')}
             </div>
-            <div className="text-gray-400 text-xs">{firstFlight.airplane}</div>
           </div>
         </div>
-        <div className="font-bold text-md">{getRouteDisplay()}</div>
-        <div className="text-gray-500 text-md">{formatDuration(flightData.total_duration)}</div>
-        <div className="flex flex-col items-center gap-1">
-          <div className="text-gray-500 text-md">{Math.round(flightData.carbon_emissions.this_flight / 1000)}kg CO2</div>
-          <span className={`ml-1 text-xs ${flightData.carbon_emissions.difference_percent < 0 ? 'text-green-600' : 'text-red-600'}`}>
-            ({flightData.carbon_emissions.difference_percent > 0 ? '+' : ''}{flightData.carbon_emissions.difference_percent}% vs typical)
-          </span>
-        </div>
-        <div className="flex flex-col items-center gap-1">
-          {isConnecting && flightData.layovers && (
-            <div className="text-orange-600 text-sm font-medium mb-1">
-              {flightData.layovers.length} stop{flightData.layovers.length > 1 ? 's' : ''}
-            </div>
-          )}
-          {!isConnecting && (
-            <div className="text-green-600 text-sm font-medium mb-1">Non-Stop</div>
-          )}
-          <div className="text-gray-700 font-bold text-lg">${flightData.price}</div>
-          <span className="text-gray-400 text-sm">Class: {firstFlight.travel_class}</span>
+
+        {/* Right side: route, duration, emissions, price */}
+        <div className="w-full md:w-auto flex items-center justify-between md:justify-end md:gap-8">
+          <div className="font-bold text-sm md:text-md lg:text-lg text-gray-700">{getRouteDisplay()}</div>
+          <div className="text-gray-500 text-sm md:text-md">{formatDuration(flightData.total_duration)}</div>
+          
+          <div className="hidden sm:flex flex-col items-center gap-1">
+            <div className="text-gray-500 text-sm md:text-md">{Math.round(flightData.carbon_emissions.this_flight / 1000)}kg CO2</div>
+            <span className={`ml-1 text-xs ${flightData.carbon_emissions.difference_percent < 0 ? 'text-green-600' : 'text-red-600'}`}>
+              ({flightData.carbon_emissions.difference_percent > 0 ? '+' : ''}{flightData.carbon_emissions.difference_percent}% vs typical)
+            </span>
+          </div>
+
+          <div className="hidden md:flex flex-col items-end gap-1">
+            {isConnecting && flightData.layovers && (
+              <div className="text-orange-600 text-sm font-medium mb-1">
+                {flightData.layovers.length} stop{flightData.layovers.length > 1 ? 's' : ''}
+              </div>
+            )}
+            {!isConnecting && (
+              <div className="text-green-600 text-sm font-medium mb-1">Non-Stop</div>
+            )}
+            <div className="text-gray-700 font-bold text-lg">${flightData.price}</div>
+            <span className="text-gray-400 text-sm">Class: {firstFlight.travel_class}</span>
+          </div>
         </div>
       </div>
 
+
       {/* Flight segments and layovers */}
       {isConnecting && (
-        <div className="mb-4 bg-gray-50 p-4 rounded-lg">
+        <div className="mt-4 bg-gray-50 p-4 rounded-lg">
           <div className="text-gray-700 font-medium mb-3">Flight Details:</div>
           {flightData.flights.map((flight, index) => (
             <div key={index} className="mb-3">
-              <div className="flex justify-between items-center">
-                <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                   <div className="text-sm">
                     <span className="font-medium">{flight.flight_number}</span> • {flight.airline}
                   </div>
@@ -272,7 +286,7 @@ const FlightBox = ({ id, selectedIndex, onClick, flightData } : {
                   </div>
                 </div>
                 {flight.often_delayed_by_over_30_min && (
-                  <span className="text-red-600 text-xs bg-red-100 px-2 py-1 rounded">
+                  <span className="text-red-600 text-xs bg-red-100 px-2 py-1 rounded self-start sm:self-center">
                     Often delayed
                   </span>
                 )}
@@ -280,7 +294,7 @@ const FlightBox = ({ id, selectedIndex, onClick, flightData } : {
               
               {/* Layover info */}
               {index < flightData.flights.length - 1 && flightData.layovers && flightData.layovers[index] && (
-                <div className="mt-2 ml-4 text-sm text-orange-600 bg-orange-50 p-2 rounded">
+                <div className="mt-2 ml-0 sm:ml-4 text-sm text-orange-600 bg-orange-50 p-2 rounded">
                   Layover in {flightData.layovers[index].name} ({flightData.layovers[index].id}): {formatDuration(flightData.layovers[index].duration)}
                 </div>
               )}
@@ -290,11 +304,11 @@ const FlightBox = ({ id, selectedIndex, onClick, flightData } : {
       )}
 
       {/* Additional details section */}
-      <div className="space-y-3 text-sm">
-        <div className="flex flex-wrap gap-2 mt-2">
+      <div className="space-y-3 text-sm mt-4">
+        <div className="flex flex-wrap gap-2">
           {/* Collect all extensions from all flights */}
           {flightData.flights.map(flight => flight.extensions).flat().map((extension, index) => (
-            <span key={index} className="bg-gray-100 px-6 py-1.5 rounded-md text-gray-600 text-xs">
+            <span key={index} className="bg-gray-100 px-4 py-1.5 rounded-md text-gray-600 text-xs">
               {extension}
             </span>
           ))}

@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import GrayBox from "@/components/gray-box";
 import PreferenceBox from "@/components/preference-box";
 import LayoutDiv from "@/components/layout-div";
+import { validateTripForm, ValidationErrors } from "@/utils/validation";
 
 
 function Home() {
@@ -43,12 +44,45 @@ function Home() {
 
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement | null>(null);
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
 
   const [ completions, setCompletions ] = useState<string[]>([]);
   const [ currentLocationCompletions, setCurrentLocationCompletions ] = useState<string[]>([]);
 
+  // Get tomorrow's date for min attribute
+  const getTomorrowDate = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  };
+
+  // Check if form is valid
+  const isFormValid = () => {
+    const errors = validateTripForm(departureDate, returnDate, numberOfAdults, numberOfChildren);
+    return Object.keys(errors).length === 0 && 
+           arrivalLocation !== "" && 
+           departureLocation !== "" && 
+           departureDate !== "" && 
+           returnDate !== "";
+  };
+
   const generatePlan = async () => {
+    // Validate form before proceeding
+    const errors = validateTripForm(departureDate, returnDate, numberOfAdults, numberOfChildren);
+    setValidationErrors(errors);
+    
+    if (Object.keys(errors).length > 0) {
+      return;
+    }
+
     if (arrivalLocation === "" || departureLocation === "" || departureDate === "" || returnDate === "") {
+      // Add validation error for missing required fields
+      setValidationErrors(prev => ({
+        ...prev,
+        departureDate: !departureDate ? 'Departure date is required' : prev.departureDate,
+        returnDate: !returnDate ? 'Return date is required' : prev.returnDate,
+        travelers: !arrivalLocation || !departureLocation ? 'Please fill in all required fields' : prev.travelers
+      }));
       return;
     }
 
@@ -137,6 +171,58 @@ function Home() {
     })
   }
 
+  const handleDepartureDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDepartureDate(e.target.value);
+    // Clear validation errors when user makes changes
+    if (validationErrors.departureDate) {
+      setValidationErrors(prev => ({ ...prev, departureDate: undefined }));
+    }
+    // Real-time validation
+    if (e.target.value && returnDate) {
+      const errors = validateTripForm(e.target.value, returnDate, numberOfAdults, numberOfChildren);
+      setValidationErrors(prev => ({ ...prev, ...errors }));
+    }
+  };
+
+  const handleReturnDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setReturnDate(e.target.value);
+    // Clear validation errors when user makes changes
+    if (validationErrors.returnDate) {
+      setValidationErrors(prev => ({ ...prev, returnDate: undefined }));
+    }
+    // Real-time validation
+    if (departureDate && e.target.value) {
+      const errors = validateTripForm(departureDate, e.target.value, numberOfAdults, numberOfChildren);
+      setValidationErrors(prev => ({ ...prev, ...errors }));
+    }
+  };
+
+  const handleAdultsChange = (newValue: number) => {
+    setNumberOfAdults(newValue);
+    // Clear validation errors when user makes changes
+    if (validationErrors.travelers) {
+      setValidationErrors(prev => ({ ...prev, travelers: undefined }));
+    }
+    // Real-time validation
+    if (departureDate && returnDate) {
+      const errors = validateTripForm(departureDate, returnDate, newValue, numberOfChildren);
+      setValidationErrors(prev => ({ ...prev, ...errors }));
+    }
+  };
+
+  const handleChildrenChange = (newValue: number) => {
+    setNumberOfChildren(newValue);
+    // Clear validation errors when user makes changes
+    if (validationErrors.travelers) {
+      setValidationErrors(prev => ({ ...prev, travelers: undefined }));
+    }
+    // Real-time validation
+    if (departureDate && returnDate) {
+      const errors = validateTripForm(departureDate, returnDate, numberOfAdults, newValue);
+      setValidationErrors(prev => ({ ...prev, ...errors }));
+    }
+  };
+
   return (
     <LayoutDiv>
       <div className="flex mb-4 justify-between w-full items-center">
@@ -198,11 +284,33 @@ function Home() {
                 <div className="flex gap-8 mb-6">
                   <div className="flex flex-col gap-2 flex-1 relative">
                     <div className="text-gray-400 text-sm font-bold">FROM</div>
-                    <input type="date" value={departureDate} onChange={(e) => setDepartureDate(e.target.value)} className="h-8 rounded-lg bg-gray-50 border border-gray-300 flex items-center px-4 font-semibold text-md text-gray-700 hover:bg-gray-100 transition-colors text-left" />
+                    <input 
+                      type="date" 
+                      value={departureDate} 
+                      onChange={handleDepartureDateChange} 
+                      className={`h-8 rounded-lg bg-gray-50 border flex items-center px-4 font-semibold text-md text-gray-700 hover:bg-gray-100 transition-colors text-left ${
+                        validationErrors.departureDate ? 'border-red-500' : 'border-gray-300'
+                      }`} 
+                      min={getTomorrowDate()}
+                    />
+                    {validationErrors.departureDate && (
+                      <div className="text-red-500 text-xs mt-1">{validationErrors.departureDate}</div>
+                    )}
                   </div>
                   <div className="flex flex-col gap-2 flex-1 relative">
                     <div className="text-gray-400 text-sm font-bold">TO</div>
-                    <input type="date" value={returnDate} onChange={(e) => setReturnDate(e.target.value)} className="h-8 rounded-lg bg-gray-50 border border-gray-300 flex items-center px-4 font-semibold text-md text-gray-700 hover:bg-gray-100 transition-colors text-left" />
+                    <input 
+                      type="date" 
+                      value={returnDate} 
+                      onChange={handleReturnDateChange} 
+                      className={`h-8 rounded-lg bg-gray-50 border flex items-center px-4 font-semibold text-md text-gray-700 hover:bg-gray-100 transition-colors text-left ${
+                        validationErrors.returnDate ? 'border-red-500' : 'border-gray-300'
+                      }`} 
+                      min={departureDate || getTomorrowDate()}
+                    />
+                    {validationErrors.returnDate && (
+                      <div className="text-red-500 text-xs mt-1">{validationErrors.returnDate}</div>
+                    )}
                   </div>
                 </div>
 
@@ -213,7 +321,7 @@ function Home() {
                       <div className="text-sm text-gray-600">Adults</div>
                       <div className="flex items-center h-9 rounded-lg bg-gray-50 border border-gray-300">
                         <button 
-                          onClick={() => setNumberOfAdults(prev => Math.max(1, prev - 1))}
+                          onClick={() => handleAdultsChange(Math.max(1, numberOfAdults - 1))}
                           className="w-12 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-l-lg"
                         >
                           -
@@ -222,8 +330,13 @@ function Home() {
                           {numberOfAdults}
                         </div>
                         <button
-                          onClick={() => setNumberOfAdults(prev => prev + 1)} 
-                          className="w-12 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-r-lg"
+                          onClick={() => handleAdultsChange(numberOfAdults + 1)} 
+                          disabled={numberOfAdults + numberOfChildren >= 6}
+                          className={`w-12 h-full flex items-center justify-center rounded-r-lg ${
+                            numberOfAdults + numberOfChildren >= 6 
+                              ? 'text-gray-400 cursor-not-allowed' 
+                              : 'text-gray-600 hover:bg-gray-100'
+                          }`}
                         >
                           +
                         </button>
@@ -234,7 +347,7 @@ function Home() {
                       <div className="text-sm text-gray-600">Children</div>
                       <div className="flex items-center h-9 rounded-lg bg-gray-50 border border-gray-300">
                         <button
-                          onClick={() => setNumberOfChildren(prev => Math.max(0, prev - 1))}
+                          onClick={() => handleChildrenChange(Math.max(0, numberOfChildren - 1))}
                           className="w-12 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-l-lg"
                         >
                           -
@@ -243,13 +356,24 @@ function Home() {
                           {numberOfChildren}
                         </div>
                         <button
-                          onClick={() => setNumberOfChildren(prev => Math.max(0, prev + 1))}
-                          className="w-12 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-r-lg"
+                          onClick={() => handleChildrenChange(numberOfChildren + 1)}
+                          disabled={numberOfAdults + numberOfChildren >= 6}
+                          className={`w-12 h-full flex items-center justify-center rounded-r-lg ${
+                            numberOfAdults + numberOfChildren >= 6 
+                              ? 'text-gray-400 cursor-not-allowed' 
+                              : 'text-gray-600 hover:bg-gray-100'
+                          }`}
                         >
                           +
                         </button>
                       </div>
                     </div>
+                  </div>
+                  {validationErrors.travelers && (
+                    <div className="text-red-500 text-xs">{validationErrors.travelers}</div>
+                  )}
+                  <div className="text-xs text-gray-500">
+                    Total travelers: {numberOfAdults + numberOfChildren}/6
                   </div>
                 </div>
                 
@@ -317,7 +441,13 @@ function Home() {
                   >
                     Cancel
                   </Button>
-                  <Button className="h-10 px-6" onClick={generatePlan}>Generate Plan</Button>
+                  <Button 
+                    className="h-10 px-6" 
+                    onClick={generatePlan}
+                    disabled={!isFormValid()}
+                  >
+                    Generate Plan
+                  </Button>
                 </div>
               </div>
             </div>
