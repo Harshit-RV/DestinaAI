@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectGroup, SelectLabel, SelectItem, SelectContent } from "@/components/ui/select";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input"
 // import { useTripPlanner } from "@/contexts/TripPlannerContext";
 import { useNavigate } from "react-router-dom";
@@ -15,17 +15,59 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import LayoutDiv from "@/components/layout-div";
+import { API_URL } from "@/App";
+import { useTripPlanner } from "@/contexts/TripPlannerContext";
+
+interface Hotel {
+  property_token: string;
+  name: string;
+  description: string;
+  images: { thumbnail: string }[];
+  overall_rating: number;
+  reviews: number;
+  rate_per_night: { lowest: string };
+  amenities: string[];
+}
 
 function ChooseHotel() {
   const navigate = useNavigate();
-  // const { selectedHotel, setSelectedHotel } = useTripPlanner();
-  const [selectedHotelIndex, setSelectedHotelIndex] = useState<number>(0);
+  const [selectedHotelId, setSelectedHotelId] = useState<string | null>(null);
+  const [ hotelData, setHotelData ] = useState<Hotel[]>([]);
+  const [loading, setLoading] = useState(false);
+
+   const {
+    arrivalLocation,
+    hotelPreferences,
+    interests,
+  } = useTripPlanner();
+
+  const fetchHotelData = async () => {
+    try {
+      setHotelData([]);
+      setLoading(true);
+      const response = await fetch(
+        `${API_URL}/travelplan/hotels?` + 
+        `interests=${interests.join(', ')}&` +
+        `location=${arrivalLocation}&` +
+        `hotelPreference=${hotelPreferences.join(', ')}&` +
+        `checkInDate=2025-06-23&` +
+        `checkOutDate=2025-06-28`
+      );
+      const data = await response.json();
+      setHotelData(data.properties);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching flights:', error);
+    }
+  }
 
   const handleContinue = () => {
-    // Here you would typically save the selected hotel to your backend
-    // For now, we'll just navigate to a summary page
     navigate('/trip-summary');
   };
+
+  useEffect(() => {
+    fetchHotelData();
+  }, []);
 
   return (
     <LayoutDiv>
@@ -62,31 +104,31 @@ function ChooseHotel() {
               <div className="flex flex-col gap-2 px-2">
                 <div className="flex items-center gap-2">
                   <input type="checkbox" />
-                  <div>Free Wifi</div>
+                  <div>Free Wi-Fi</div>
                 </div>
                 <div className="flex items-center gap-2">
                   <input type="checkbox" />
-                  <div>Free Wifi</div>
+                  <div>Pet Friendly</div>
                 </div>
                 <div className="flex items-center gap-2">
                   <input type="checkbox" />
-                  <div>Free Wifi</div>
+                  <div>Pool</div>
                 </div>
                 <div className="flex items-center gap-2">
                   <input type="checkbox" />
-                  <div>Free Wifi</div>
+                  <div>Fitness Center</div>
                 </div>
                 <div className="flex items-center gap-2">
                   <input type="checkbox" />
-                  <div>Free Wifi</div>
+                  <div>Kitchen</div>
                 </div>
                 <div className="flex items-center gap-2">
                   <input type="checkbox" />
-                  <div>Free Wifi</div>
+                  <div>Wheelchair Accessible</div>
                 </div>
               </div>
               <div className="grid gap-3">
-                <Input id="sheet-demo-username" defaultValue="@peduarte" />
+                <Input id="price-range" placeholder="Price range" />
               </div>
             </div>
             <SheetFooter>
@@ -99,22 +141,22 @@ function ChooseHotel() {
         </Sheet>
       </div>
       
-      <div className="border w-full overflow-scroll overflow-x-hidden">
-        <HotelBox id={1} selectedIndex={selectedHotelIndex} onClick={() => setSelectedHotelIndex(1)}/>
-        <HotelBox id={2} selectedIndex={selectedHotelIndex} onClick={() => setSelectedHotelIndex(2)}/>
-        <HotelBox id={3} selectedIndex={selectedHotelIndex} onClick={() => setSelectedHotelIndex(3)}/>
-        <HotelBox id={4} selectedIndex={selectedHotelIndex} onClick={() => setSelectedHotelIndex(4)}/>
-        <HotelBox id={5} selectedIndex={selectedHotelIndex} onClick={() => setSelectedHotelIndex(5)}/>
-        <HotelBox id={6} selectedIndex={selectedHotelIndex} onClick={() => setSelectedHotelIndex(6)}/>
-        <HotelBox id={7} selectedIndex={selectedHotelIndex} onClick={() => setSelectedHotelIndex(7)}/>
-        <HotelBox id={8} selectedIndex={selectedHotelIndex} onClick={() => setSelectedHotelIndex(8)}/>
+      <div className="border w-full overflow-scroll overflow-x-hidden max-h-[calc(100vh-200px)]">
+        {hotelData.map((hotel) => (
+          <HotelBox 
+            key={hotel.property_token}
+            hotel={hotel}
+            selected={hotel.property_token === selectedHotelId}
+            onClick={() => setSelectedHotelId(hotel.property_token)}
+          />
+        ))}
       </div>
 
-      <div className="flex justify-end w-full">
+      <div className="flex justify-end w-full mt-4">
         <Button 
           size={'lg'} 
           className="w-40" 
-          disabled={selectedHotelIndex === 0}
+          disabled={!selectedHotelId}
           onClick={handleContinue}
         >
           Continue
@@ -124,43 +166,66 @@ function ChooseHotel() {
   );
 }
 
-const HotelBox = ({ id, selectedIndex, onClick } : { id: number, selectedIndex: number, onClick: () => void }) => {
+const HotelBox = ({ 
+  hotel, 
+  selected, 
+  onClick 
+} : { 
+  hotel: Hotel, 
+  selected: boolean, 
+  onClick: () => void 
+}) => {
+  const imageUrl = hotel.images && hotel.images.length > 0 
+    ? hotel.images[0].thumbnail 
+    :  "https://via.placeholder.com/150";
+
+  const displayAmenities = hotel.amenities ? hotel.amenities.slice(0, 9) : [];
+  
+  const rating = hotel.overall_rating 
+    ? hotel.overall_rating.toFixed(1) 
+    : "N/A";
+  
+  const reviewsCount = hotel.reviews || 0;
+  
+  const pricePerNight = hotel.rate_per_night?.lowest || "N/A";
+
   return (
-   <>
-    <div onClick={onClick} className={`flex border-b items-center pr-10 justify-between ${selectedIndex === id ? "outline-[#28666E] outline-2" : ""} m-0.5 h-40`}>
-      <div className="flex h-full gap-5">
-        <img
-          className="h-full w-2/5 border-r"
-          src="https://www.seleqtionshotels.com/content/dam/seleqtions/Connaugth/TCPD_PremiumBedroom4_1235.jpg/jcr:content/renditions/cq5dam.web.1280.1280.jpeg"
-          alt="Ritz Carlton Photos" 
-        />
-        <div className="flex flex-col gap-2 justify-center">
-          <div className="text-black font-bold text-2xl">The Ritz Carlton Dubai</div>
-          <div className="text-gray-500 text-sm">Janakpuri, New Delhi, IN</div>
+    <div 
+      onClick={onClick} 
+      className={`flex border-b w-full items-center pr-10 justify-between ${selected ? "outline-[#28666E] outline-2" : ""} m-0.5`}
+    >
+      <img
+          className="h-full w-1/4"
+          src={imageUrl}
+          alt={`${hotel.name} Photo`} 
+      />
+      <div className="flex w-3/4 flex-col pl-6">
+        <div className={`flex items-center justify-between`}>
+        
+          <div className="flex h-full w-3/5 gap-5 ">
+            <div className="flex flex-col gap-2 justify-center">
+              <div className="text-black font-bold text-xl">{hotel.name}</div>
+              <div className="text-gray-400 text-sm">{hotel.description}</div>
+            </div>
+          </div>
+
+          <div className="text-gray-500 gap-2 flex flex-col text-md">
+            <div className="text-2xl">{rating} ⭐️</div>
+            <div className="text-sm">{reviewsCount} Reviews</div>
+          </div>
+
+          <div className="text-gray-600 flex flex-col text-md">
+            <div className="text-2xl text-black font-bold">{pricePerNight}</div>
+            <div className="text-sm">per night</div>
+          </div>
+        </div>
+        
+        <div className="mt-5 text-sm bg-gray-100 px-6 py-1.5 rounded-md text-gray-600 text-xs">
+            {displayAmenities.join(" | ")}
         </div>
       </div>
-      <div className="text-gray-500 gap-2 flex flex-col text-md">
-        <div className="text-2xl">4.5 ⭐️</div>
-        <div className="text-sm">10k Reviews</div>
-      </div>
-      <div className="grid grid-cols-3 gap-x-3 gap-y-2 text-gray-500 text-sm"> 
-        <div>Free Wifi</div>
-        <div>Pet friendly</div>
-        <div>Ultra Luxury</div>
-        <div>Free Wifi</div>
-        <div>Pet friendly</div>
-        <div>Ultra Luxury</div>
-        <div>Free Wifi</div>
-        <div>Pet friendly</div>
-        <div>Ultra Luxury</div>
-      </div>
 
-      <div className="text-gray-600 flex flex-col text-md">
-        <div className="text-2xl text-black font-bold">$100</div>
-        <div className="text-sm">per night</div>
-      </div>
     </div>
-  </>
   );
 };
 

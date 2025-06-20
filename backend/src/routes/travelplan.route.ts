@@ -67,21 +67,23 @@ app.get('/return-flights'  , async (req, res) : Promise<any> => {
 
 app.get('/hotels'  , async (req, res) : Promise<any> => {
   try {
-    const { departureAirportId, arrivalAirportId, departureDate, returnDate } = req.query as { departureAirportId: string, arrivalAirportId: string, departureDate: string, returnDate: string };
+    console.log(req.query);
+    const { interests, hotelPreference, location, checkInDate, checkOutDate } = req.query as { location: string, hotelPreference: string, interests: string,checkInDate: string, checkOutDate: string };
 
-    // const flightsData = await getFlightsData({
-    //   departureAirportId,
-    //   arrivalAirportId,
-    //   departureDate,
-    //   returnDate,
-    // });
-    const flightsData = await getHotelsData({
-      q: "pet friendly hotels in dubai",
-      departureDate: "2025-06-11",
-      returnDate: "2025-06-14",
+    // const location = "Dubai";
+    // const hotelPreference = "luxury";
+    // const interests = "museums, parks";
+    // const checkInDate = "2025-08-21";
+    // const checkOutDate = "2025-08-30";
+
+
+    const hotelsData = await getHotelsData({
+      q: `hotels in city of ${location}, near places of interest like ${interests}, with preferences like ${hotelPreference}`,
+      checkInDate: checkInDate,
+      checkOutDate: checkOutDate,
     });
 
-    return res.send(flightsData);
+    return res.send(hotelsData);
   } catch (error) {
     console.error('Error fetching hotels data:', error);
     return res.status(500).send('Error fetching hotels data');

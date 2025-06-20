@@ -197,7 +197,7 @@ function Home() {
                 {/* Date Selection */}
                 <div className="flex gap-8 mb-6">
                   <div className="flex flex-col gap-2 flex-1 relative">
-                    <div className="text-gray-400 text-sm font-bold">FROM {departureDate}</div>
+                    <div className="text-gray-400 text-sm font-bold">FROM</div>
                     <input type="date" value={departureDate} onChange={(e) => setDepartureDate(e.target.value)} className="h-8 rounded-lg bg-gray-50 border border-gray-300 flex items-center px-4 font-semibold text-md text-gray-700 hover:bg-gray-100 transition-colors text-left" />
                   </div>
                   <div className="flex flex-col gap-2 flex-1 relative">

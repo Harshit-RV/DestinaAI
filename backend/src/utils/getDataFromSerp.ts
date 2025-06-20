@@ -54,8 +54,8 @@ export async function getReturnFlightsData(props: ReturnFlightsDataProps) {
 
 interface HotelsDataProps {
   q: string;
-  departureDate: string;
-  returnDate: string;
+  checkInDate: string;
+  checkOutDate: string;
 }
 
 export async function getHotelsData(props: HotelsDataProps) {
@@ -64,11 +64,17 @@ export async function getHotelsData(props: HotelsDataProps) {
   const response = await getJson({
     engine: "google_hotels",
     q: props.q,
+    eco_certified: "true",
     hl: "en",
-    check_in_date: props.departureDate,
-    check_out_date: props.returnDate,
+    check_in_date: props.checkInDate,
+    check_out_date: props.checkOutDate,
+    adults: 6,
+    property_types: "12, 13, 15, 17, 18, 19, 23",
     currency: "USD",
+    vacation_rentals: "false",
   });
+    // "no_cache": "true",
+    // "api_key": API_KEY,
 
   return response;
 }
