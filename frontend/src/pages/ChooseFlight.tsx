@@ -59,16 +59,20 @@ function ChooseFlight({ type = 'outbound' }: { type: "outbound" | "return" }) {
     returnDate,
     selectedOutboundFlight,
     setSelectedOutboundFlight,
-    setSelectedReturnFlight
+    setSelectedReturnFlight,
+    setDestinationArrivalTime
   } = useTripPlanner();
 
   const [selectedFlight, setSelectedFlight] = useState<number>(0);
   const [flightData, setFlightData] = useState<FlightData[]>([]);
+  
 
   const [ loading, setLoading ] = useState<boolean>(true);
+  const [ error, setError ] = useState<string | null>(null);
 
   const fetchFlightData = async () => {
     try {
+      setError(null);
       setFlightData([]);
       setSelectedFlight(0);
       setLoading(true);
@@ -84,6 +88,7 @@ function ChooseFlight({ type = 'outbound' }: { type: "outbound" | "return" }) {
       setLoading(false);
     } catch (error) {
       console.error('Error fetching flights:', error);
+      setError(JSON.stringify(error));
     }
   }
 
@@ -126,6 +131,7 @@ function ChooseFlight({ type = 'outbound' }: { type: "outbound" | "return" }) {
     
     if (type === 'outbound') {
       setSelectedOutboundFlight(selectedFlightData);
+      setDestinationArrivalTime(selectedFlightData.flights[selectedFlightData.flights.length - 1].arrival_airport.time);
       navigate('/choose-return-flight');
     } else {
       setSelectedReturnFlight(selectedFlightData);
@@ -138,6 +144,14 @@ function ChooseFlight({ type = 'outbound' }: { type: "outbound" | "return" }) {
       <div className="flex mb-2 justify-between w-full items-center">
         <h1 className="text-3xl flex items-baseline gap-2 font-black">Choose Your {type === 'outbound' ? 'Outbound' : 'Return'} Flight <div className="text-gray-400 text-sm font-normal">({flightData.length} results)</div></h1>
       </div>
+
+      {
+        error && (
+          <div className="text-red-500 text-sm">
+            {error}
+          </div>
+        )
+      }
       
       {loading ?  
         <div className="flex flex-col items-center justify-center h-64">

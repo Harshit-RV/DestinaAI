@@ -1,19 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Select, SelectTrigger, SelectValue, SelectGroup, SelectLabel, SelectItem, SelectContent } from "@/components/ui/select";
 import { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input"
-// import { useTripPlanner } from "@/contexts/TripPlannerContext";
 import { useNavigate } from "react-router-dom";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
 import LayoutDiv from "@/components/layout-div";
 import { API_URL } from "@/App";
 import { useTripPlanner } from "@/contexts/TripPlannerContext";
@@ -22,7 +9,7 @@ interface Hotel {
   property_token: string;
   name: string;
   description: string;
-  images: { thumbnail: string }[];
+  images: { original_image: string, thumbnail: string }[];
   overall_rating: number;
   reviews: number;
   rate_per_night: { lowest: string };
@@ -34,30 +21,66 @@ function ChooseHotel() {
   const [selectedHotelId, setSelectedHotelId] = useState<string | null>(null);
   const [ hotelData, setHotelData ] = useState<Hotel[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
    const {
-    arrivalLocation,
+    selectedOutboundFlight,
+    selectedReturnFlight,
+    destinationCityCommonName,
     hotelPreferences,
+    numberOfAdults,
+    numberOfChildren,
     interests,
   } = useTripPlanner();
 
+
+  const getDateFromAirportTime = (timestamp: string | undefined) => {
+    if (!timestamp) return '';
+    const date = timestamp.split(' ')[0];
+    const time = timestamp.split(' ')[1];
+
+    const hours = time.split(':')[0];
+
+    if (Number(hours) < 8) {
+      const dayPart = date.split('-')[2];
+      const dayBefore = Number(dayPart) - 1;
+      return date.split('-')[0] + '-' + date.split('-')[1] + '-' + dayBefore;
+    } else {
+      return date;
+    }
+  }
+
   const fetchHotelData = async () => {
     try {
+      setError(null);
       setHotelData([]);
       setIsLoading(true);
+      // const response = await fetch(
+      //   `${API_URL}/travelplan/hotels?` + 
+      //   `interests=&` +
+      //   `location=Paris,Paris,Ile-de-France,France &` +
+      //   `hotelPreference=luxury,pet-friendly&` +
+      //   `checkInDate=2025-06-26&` +
+      //   `checkOutDate=2025-06-28&` +
+      //   `numberOfAdults=2&` +
+      //   `numberOfChildren=0`
+      // );
       const response = await fetch(
         `${API_URL}/travelplan/hotels?` + 
         `interests=${interests.join(', ')}&` +
-        `location=${arrivalLocation}&` +
+        `location=${destinationCityCommonName}&` +
         `hotelPreference=${hotelPreferences.join(', ')}&` +
-        `checkInDate=2025-06-23&` +
-        `checkOutDate=2025-06-28`
+        `checkInDate=${getDateFromAirportTime(selectedOutboundFlight?.flights[selectedOutboundFlight?.flights.length - 1].arrival_airport.time)}&` +
+        `checkOutDate=${getDateFromAirportTime(selectedReturnFlight?.flights[0].departure_airport.time)}&` +
+        `numberOfAdults=${numberOfAdults}&` +
+        `numberOfChildren=${numberOfChildren}`
       );
       const data = await response.json();
       setHotelData(data.properties);
       setIsLoading(false);
     } catch (error) {
       console.error('Error fetching hotels:', error);
+      setError(JSON.stringify(error));
       setIsLoading(false);
     }
   }
@@ -74,7 +97,7 @@ function ChooseHotel() {
     <LayoutDiv>
       <div className="flex flex-col sm:flex-row mb-4 sm:mb-2 justify-between w-full items-start sm:items-center gap-4">
         <h1 className="text-2xl sm:text-3xl font-black">Choose Your Hotel</h1>
-        <Sheet>
+        {/* <Sheet>
           <SheetTrigger asChild>
             <Button variant="outline" className="w-full sm:w-auto">Filters</Button>
           </SheetTrigger>
@@ -139,8 +162,16 @@ function ChooseHotel() {
               </SheetClose>
             </SheetFooter>
           </SheetContent>
-        </Sheet>
+        </Sheet> */}
       </div>
+
+      {
+        error && (
+          <div className="text-red-500 text-sm">
+            {error}
+          </div>
+        )
+      }
       
       {isLoading ? (
         <div className="flex flex-col items-center justify-center h-64">
@@ -189,9 +220,6 @@ const HotelBox = ({
   selected: boolean, 
   onClick: () => void 
 }) => {
-  const imageUrl = hotel.images && hotel.images.length > 0 
-    ? hotel.images[0].thumbnail 
-    :  "https://via.placeholder.com/150";
 
   const displayAmenities = hotel.amenities ? hotel.amenities.slice(0, 9) : [];
   
@@ -210,9 +238,12 @@ const HotelBox = ({
     >
       {/* Hotel Image */}
       <img
-        className="w-full md:w-1/4 h-48 md:h-full object-cover rounded-lg md:rounded-none mb-4 md:mb-0"
-        src={imageUrl}
+        className="w-full md:w-1/4 max-h-48 md:h-full object-cover rounded-lg md:rounded-none mb-4 md:mb-0"
+        src={hotel.images[0].original_image}
         alt={`${hotel.name} Photo`} 
+        onError={(e) => {
+          e.currentTarget.src = hotel.images.length > 1 ? hotel.images[1].original_image : hotel.images[0].thumbnail;
+        }}
       />
     
       <div className="flex flex-col w-full md:pl-6">
@@ -222,7 +253,7 @@ const HotelBox = ({
           <div className="flex flex-col sm:flex-row w-full sm:w-full gap-4">
             <div className="flex flex-col gap-2 flex-1">
               <div className="text-black font-bold text-lg sm:text-xl">{hotel.name}</div>
-              <div className="text-gray-400 text-sm line-clamp-2">{hotel.description}</div>
+              <div className="text-gray-400 text-sm line-clamp-2">{hotel.description} </div>
             </div>
           </div>
 

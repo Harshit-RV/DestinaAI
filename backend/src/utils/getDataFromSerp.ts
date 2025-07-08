@@ -56,6 +56,8 @@ interface HotelsDataProps {
   q: string;
   checkInDate: string;
   checkOutDate: string;
+  numberOfAdults: number;
+  numberOfChildren: number;
 }
 
 export async function getHotelsData(props: HotelsDataProps) {
@@ -64,17 +66,15 @@ export async function getHotelsData(props: HotelsDataProps) {
   const response = await getJson({
     engine: "google_hotels",
     q: props.q,
-    eco_certified: "true",
     hl: "en",
     check_in_date: props.checkInDate,
     check_out_date: props.checkOutDate,
-    adults: 6,
+    adults: props.numberOfAdults,
+    children: props.numberOfChildren,
     property_types: "12, 13, 15, 17, 18, 19, 23",
     currency: "USD",
     vacation_rentals: "false",
   });
-    // "no_cache": "true",
-    // "api_key": API_KEY,
 
   return response;
 }

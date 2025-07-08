@@ -40,6 +40,7 @@ function Home() {
     setMaximumBudget,
     setDepartureAirportCode,
     setArrivalAirportCode,
+    setDestinationCityCommonName,
   } = useTripPlanner();
 
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
@@ -100,8 +101,20 @@ function Home() {
       const { departureCodes, arrivalCodes } = response.data.parsed;
       console.log({departureCodes, arrivalCodes});
 
+      for (const code of departureCodes) {
+        if (code.length !== 3) {
+          departureCodes.splice(departureCodes.indexOf(code), 1);
+        }
+      }
+      for (const code of arrivalCodes) {
+        if (code.length !== 3) {
+          arrivalCodes.splice(arrivalCodes.indexOf(code), 1);
+        }
+      }
+
       setDepartureAirportCode(departureCodes);
       setArrivalAirportCode(arrivalCodes);
+      setDestinationCityCommonName(response.data.parsed.arrivalCityName + ', ' + response.data.parsed.arrivalCountryName);
 
       // Navigate to flight selection
       navigate('/choose-flight');

@@ -8,6 +8,17 @@ app.get('/get-airport-codes', async (req, res) : Promise<any> => {
   const { departureCityName, arrivalCityName } = req.query as { departureCityName: string, arrivalCityName: string };
   const airportCodes = await getAirportCodesFromCityname(departureCityName, arrivalCityName);
 
+  // const airportCodes = {
+  //   role: 'assistant',
+  //   content: '{"departureCodes":["DEL","VIDP","DELHI"],"arrivalCodes":["DXB","OMDB","DXBAIRPORT"]}',
+  //   refusal: null,
+  //   annotations: [],
+  //   parsed: {
+  //     departureCodes: [ 'DEL', 'DELHI' ],
+  //     arrivalCodes: [ 'DXB', 'DXBAIRPORT' ]
+  //   }
+  // }
+
   if (airportCodes?.parsed) {
     for (const code of airportCodes?.parsed.departureCodes) {
       if (code.length !== 3) {

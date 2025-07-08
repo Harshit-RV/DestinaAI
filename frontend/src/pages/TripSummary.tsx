@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { useTripPlanner } from "@/contexts/TripPlannerContext";
 import { useNavigate } from "react-router-dom";
 import LayoutDiv from "@/components/layout-div";
-import { FlightData } from "./ChooseFlight";
 
 function TripSummary() {
   const navigate = useNavigate();
@@ -19,7 +18,8 @@ function TripSummary() {
     maximumBudget,
     selectedOutboundFlight,
     selectedReturnFlight,
-    selectedHotel
+    selectedHotel,
+    dayPlan
   } = useTripPlanner();
 
   const formatDate = (dateString: string) => {
@@ -68,7 +68,7 @@ function TripSummary() {
         </div>
 
         {/* Outbound Flight */}
-        {(selectedOutboundFlight as FlightData) && (
+        {selectedOutboundFlight && (
           <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
             <h2 className="text-2xl font-bold mb-4">Outbound Flight</h2>
             <div className="flex justify-between items-center">
@@ -76,6 +76,11 @@ function TripSummary() {
                 <p className="text-gray-600">Airline</p>
                 <p className="font-semibold">{selectedOutboundFlight.flights[0].airline}</p>
               </div>
+              <div>
+                <p className="text-gray-600">arrival time</p>
+                <p className="font-semibold">{selectedOutboundFlight.flights[0].arrival_airport.time}</p>
+              </div>
+
               <div>
                 <p className="text-gray-600">Flight Number</p>
                 <p className="font-semibold">{selectedOutboundFlight.flights[0].flight_number}</p>
@@ -110,22 +115,63 @@ function TripSummary() {
         )}
 
         {/* Hotel */}
-        {selectedHotel && (
+        {!!selectedHotel && (
           <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
             <h2 className="text-2xl font-bold mb-4">Hotel</h2>
             <div className="flex justify-between items-center">
               <div>
                 <p className="text-gray-600">Hotel Name</p>
-                <p className="font-semibold">{selectedHotel.name}</p>
+                <p className="font-semibold">{(selectedHotel as Record<string, any>)?.name || 'Hotel Name'}</p>
               </div>
               <div>
                 <p className="text-gray-600">Location</p>
-                <p className="font-semibold">{selectedHotel.location}</p>
+                <p className="font-semibold">{(selectedHotel as Record<string, any>)?.location || 'Location'}</p>
               </div>
               <div>
                 <p className="text-gray-600">Price per Night</p>
-                <p className="font-semibold">${selectedHotel.price}</p>
+                <p className="font-semibold">${(selectedHotel as Record<string, any>)?.price || 'N/A'}</p>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Day Plan */}
+        {dayPlan && dayPlan.length > 0 && (
+          <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 className="text-2xl font-bold mb-4">Your Itinerary</h2>
+            <div className="space-y-6">
+              {dayPlan.map((day, index) => (
+                <div key={index} className="border-l-4 border-blue-500 pl-6">
+                  <h3 className="text-xl font-bold mb-3">{day.title}</h3>
+                  
+                  {/* Weather Forecast */}
+                  <div className="bg-blue-50 p-3 rounded-lg mb-4">
+                    <h4 className="font-semibold text-blue-800 mb-1">Weather Forecast</h4>
+                    <div className="flex items-center gap-4 text-sm text-blue-700">
+                      <span>High: {day.weather_forcast.high}</span>
+                      <span>Low: {day.weather_forcast.low}</span>
+                      <span>{day.weather_forcast.description}</span>
+                    </div>
+                  </div>
+
+                  {/* Activities */}
+                  <div className="space-y-3">
+                    {day.activities.map((activity, activityIndex) => (
+                      <div key={activityIndex} className="bg-gray-50 p-4 rounded-lg">
+                        <div className="flex justify-between items-start mb-2">
+                          <h5 className="font-semibold text-lg">{activity.title}</h5>
+                          <span className="text-green-600 font-medium">{activity.estimated_cost}</span>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
+                          <span className="bg-blue-100 px-2 py-1 rounded">{activity.type}</span>
+                          <span>{activity.start_time} - {activity.end_time}</span>
+                        </div>
+                        <p className="text-gray-700 text-sm">{activity.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}

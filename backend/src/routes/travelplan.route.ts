@@ -2,6 +2,7 @@ import { Router } from 'express';
 import axios from 'axios';
 import config from '../config';
 import { getFlightsData, getHotelsData, getReturnFlightsData } from '../utils/getDataFromSerp';
+import { getTripActivities } from '../utils/getTripActivities';
 const app = Router();
 
 interface TravelPlan {
@@ -16,6 +17,23 @@ const travelplans: TravelPlan[] = [];
 
 app.get('/', (req, res) => {
   res.send('this is the home page of travelplan');
+});
+
+app.get('/activity', async (req, res) : Promise<any> => {
+  console.log(req.query);
+  const response = await getTripActivities({
+    arrivalCityName: 'New Delhi',
+    interests: ['sightseeing'],
+    numberOfChildren: 0,
+    numberOfAdults: 2,
+    arrivalTime: '2025-08-09 21:30',
+    departureTime: '2025-08-19 21:30',
+    hotelName: 'Hyatt Centric, Janakpuri',
+    hotelLatitude: 28.6289,
+    hotelLongitude: 77.0785,
+    numberOfDays: 10,
+  });
+  res.json(response);
 });
 
 app.get('/search', async (req, res) : Promise<any> => {
@@ -68,7 +86,7 @@ app.get('/return-flights'  , async (req, res) : Promise<any> => {
 app.get('/hotels'  , async (req, res) : Promise<any> => {
   try {
     console.log(req.query);
-    const { interests, hotelPreference, location, checkInDate, checkOutDate } = req.query as { location: string, hotelPreference: string, interests: string,checkInDate: string, checkOutDate: string };
+    const { interests, hotelPreference, location, checkInDate, checkOutDate, numberOfAdults, numberOfChildren } = req.query as { location: string, hotelPreference: string, interests: string,checkInDate: string, checkOutDate: string, numberOfAdults: string, numberOfChildren: string };
 
     // const location = "Dubai";
     // const hotelPreference = "luxury";
@@ -81,6 +99,8 @@ app.get('/hotels'  , async (req, res) : Promise<any> => {
       q: `hotels in city of ${location}, near places of interest like ${interests}, with preferences like ${hotelPreference}`,
       checkInDate: checkInDate,
       checkOutDate: checkOutDate,
+      numberOfAdults: Number(numberOfAdults),
+      numberOfChildren: Number(numberOfChildren),
     });
 
     return res.send(hotelsData);
