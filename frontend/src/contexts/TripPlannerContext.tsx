@@ -467,6 +467,9 @@ interface TripPlannerContextType {
   // Day plans
   dayPlan: DayPlan[];
 
+  // Destination city common name
+  destinationCityCommonName: string;
+    
   // Setters
   setDepartureLocation: Dispatch<SetStateAction<string>>;
   setArrivalLocation: Dispatch<SetStateAction<string>>;
@@ -484,6 +487,7 @@ interface TripPlannerContextType {
   setSelectedReturnFlight: Dispatch<SetStateAction<FlightData | null>>;
   setDestinationArrivalTime: Dispatch<SetStateAction<string>>;
   setSelectedHotel: Dispatch<SetStateAction<unknown>>;
+  setDestinationCityCommonName: Dispatch<SetStateAction<string>>;
   setDayPlan: Dispatch<SetStateAction<DayPlan[]>>;
 }
 
@@ -520,6 +524,7 @@ export function TripPlannerProvider({ children }: { children: ReactNode }) {
   const [selectedOutboundFlight, setSelectedOutboundFlight] = useState<FlightData | null>(null);
   const [selectedReturnFlight, setSelectedReturnFlight] = useState<FlightData | null>(null);
   const [destinationArrivalTime, setDestinationArrivalTime] = useState('');
+  const [destinationCityCommonName, setDestinationCityCommonName] = useState('');
   const [selectedHotel, setSelectedHotel] = useState<unknown | null>(null);
   const [dayPlan, setDayPlan] = useState<DayPlan[]>(defaultDayPlan);
 
@@ -542,6 +547,7 @@ export function TripPlannerProvider({ children }: { children: ReactNode }) {
         selectedReturnFlight,
         selectedHotel,
         destinationArrivalTime,
+        destinationCityCommonName,
         dayPlan,
         setDepartureLocation,
         setArrivalLocation,
@@ -559,6 +565,7 @@ export function TripPlannerProvider({ children }: { children: ReactNode }) {
         setSelectedReturnFlight,
         setSelectedHotel,
         setDestinationArrivalTime,
+        setDestinationCityCommonName,
         setDayPlan,
       }}
     >

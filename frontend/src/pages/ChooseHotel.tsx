@@ -26,11 +26,9 @@ function ChooseHotel() {
    const {
     selectedOutboundFlight,
     selectedReturnFlight,
-    destinationCityCommonName,
-    hotelPreferences,
     numberOfAdults,
+    arrivalAirportCode,
     numberOfChildren,
-    interests,
   } = useTripPlanner();
 
 
@@ -67,9 +65,7 @@ function ChooseHotel() {
       // );
       const response = await fetch(
         `${API_URL}/travelplan/hotels?` + 
-        `interests=${interests.join(', ')}&` +
-        `location=${destinationCityCommonName}&` +
-        `hotelPreference=${hotelPreferences.join(', ')}&` +
+        `location=${arrivalAirportCode}&` +
         `checkInDate=${getDateFromAirportTime(selectedOutboundFlight?.flights[selectedOutboundFlight?.flights.length - 1].arrival_airport.time)}&` +
         `checkOutDate=${getDateFromAirportTime(selectedReturnFlight?.flights[0].departure_airport.time)}&` +
         `numberOfAdults=${numberOfAdults}&` +

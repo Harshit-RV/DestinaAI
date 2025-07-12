@@ -52,29 +52,4 @@ export async function getReturnFlightsData(props: ReturnFlightsDataProps) {
   return response.other_flights;
 }
 
-interface HotelsDataProps {
-  q: string;
-  checkInDate: string;
-  checkOutDate: string;
-  numberOfAdults: number;
-  numberOfChildren: number;
-}
-
-export async function getHotelsData(props: HotelsDataProps) {
-  serpConfig.api_key = config.serpApiKey;
-
-  const response = await getJson({
-    engine: "google_hotels",
-    q: props.q,
-    hl: "en",
-    check_in_date: props.checkInDate,
-    check_out_date: props.checkOutDate,
-    adults: props.numberOfAdults,
-    children: props.numberOfChildren,
-    property_types: "12, 13, 15, 17, 18, 19, 23",
-    currency: "USD",
-    vacation_rentals: "false",
-  });
-
-  return response;
-}
+// Hotels functionality moved to Amadeus API in getDataFromAmadeus.ts

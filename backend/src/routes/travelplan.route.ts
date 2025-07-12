@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import axios from 'axios';
 import config from '../config';
-import { getFlightsData, getHotelsData, getReturnFlightsData } from '../utils/getDataFromSerp';
+import { getFlightsData, getReturnFlightsData } from '../utils/getDataFromSerp';
 import { getTripActivities } from '../utils/getTripActivities';
+import { getHotelsByCity, getHotelsOffersByCityCode } from '../utils/getDataFromAmadeus';
 const app = Router();
 
 interface TravelPlan {
@@ -86,21 +87,15 @@ app.get('/return-flights'  , async (req, res) : Promise<any> => {
 app.get('/hotels'  , async (req, res) : Promise<any> => {
   try {
     console.log(req.query);
-    const { interests, hotelPreference, location, checkInDate, checkOutDate, numberOfAdults, numberOfChildren } = req.query as { location: string, hotelPreference: string, interests: string,checkInDate: string, checkOutDate: string, numberOfAdults: string, numberOfChildren: string };
-
-    // const location = "Dubai";
-    // const hotelPreference = "luxury";
-    // const interests = "museums, parks";
-    // const checkInDate = "2025-08-21";
-    // const checkOutDate = "2025-08-30";
-
-
-    const hotelsData = await getHotelsData({
-      q: `hotels in city of ${location}, near places of interest like ${interests}, with preferences like ${hotelPreference}`,
+    const { location, checkInDate, checkOutDate, numberOfAdults, numberOfChildren } = req.query as { location: string, hotelPreference: string, interests: string,checkInDate: string, checkOutDate: string, numberOfAdults: string, numberOfChildren: string };
+    
+    // Use Amadeus API to get hotels by city name
+    const hotelsData = await getHotelsOffersByCityCode({
+      cityCode: location,
       checkInDate: checkInDate,
       checkOutDate: checkOutDate,
-      numberOfAdults: Number(numberOfAdults),
-      numberOfChildren: Number(numberOfChildren),
+      numberOfAdults: parseInt(numberOfAdults),
+      numberOfChildren: parseInt(numberOfChildren),
     });
 
     return res.send(hotelsData);
