@@ -8,4 +8,5 @@ export default {
     serpApiKey: process.env.SERP_API_KEY || '',
     amadeusClientId: process.env.AMADEUS_CLIENT_ID || '',
     amadeusClientSecret: process.env.AMADEUS_CLIENT_SECRET || '',
+    googleApiKey: process.env.GOOGLE_API_KEY || '',
 };

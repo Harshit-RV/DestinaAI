@@ -2,6 +2,7 @@ import axios from 'axios';
 import config from '../config';
 import { getResponseFromOpenAI } from './getResponseFromOpenAI';
 import { z } from 'zod';
+import { getHotelPhotoUrl } from './google';
 
 // Types for Amadeus OAuth Token Response
 interface AmadeusTokenResponse {
@@ -63,6 +64,7 @@ interface AmadeusHotelInfo {
     hotelId: string;
     chainCode: string;
     dupeId: string;
+    photoUrl: string[] | null;
     name: string;
     cityCode: string;
     latitude: number;
@@ -135,33 +137,6 @@ interface AmadeusCreditCardPolicy {
     vendorCode: string;
 }
 
-interface AmadeusAcceptedPayments {
-    creditCards: string[];
-    methods: string[];
-    creditCardPolicies: AmadeusCreditCardPolicy[];
-}
-
-interface AmadeusGuarantee {
-    acceptedPayments: AmadeusAcceptedPayments;
-}
-
-interface AmadeusRefundable {
-    cancellationRefund: string;
-}
-
-interface AmadeusPolicies {
-    cancellations: AmadeusCancellation[];
-    guarantee: AmadeusGuarantee;
-    paymentType: string;
-    refundable: AmadeusRefundable;
-}
-
-interface AmadeusRoomInformation {
-    description: string;
-    type: string;
-    typeEstimated: AmadeusRoomTypeEstimated;
-}
-
 interface AmadeusOffer {
     id: string;
     checkInDate: string;
@@ -169,12 +144,40 @@ interface AmadeusOffer {
     rateCode: string;
     rateFamilyEstimated: AmadeusRateFamilyEstimated;
     boardType: string;
-    room: AmadeusRoom;
+    room: {
+        description: string;
+        type: string;
+        typeEstimated: AmadeusRoomTypeEstimated;
+    }
     guests: AmadeusGuests;
     price: AmadeusPrice;
-    policies: AmadeusPolicies;
+    policies: {
+        cancellations: AmadeusCancellation[];
+        guarantee: {
+            acceptedPayments: {
+                creditCards: string[];
+                methods: string[];
+                creditCardPolicies: AmadeusCreditCardPolicy[];
+            };
+        };
+        prepay: {
+            acceptedPayments: {
+                creditCards: string[];
+                methods: string[];
+                creditCardPolicies: AmadeusCreditCardPolicy[];
+            };
+        };
+        paymentType: string;
+        refundable: {
+            cancellationRefund: string;
+        };
+    }
     self: string;
-    roomInformation: AmadeusRoomInformation;
+    roomInformation: {
+        description: string;
+        type: string;
+        typeEstimated: AmadeusRoomTypeEstimated;
+    }
 }
 
 interface AmadeusHotelOffer {
@@ -185,9 +188,9 @@ interface AmadeusHotelOffer {
     self: string;
 }
 
-interface AmadeusHotelOffersResponse {
-    data: AmadeusHotelOffer[];
-}
+// interface AmadeusHotelOffersResponse {
+//     data: AmadeusHotelOffer[];
+// }
 
 // Cache for access token
 let cachedToken: string | null = null;
@@ -204,7 +207,7 @@ async function getAmadeusAccessToken(): Promise<string> {
 
     try {
         const response = await axios.post(
-            'https://test.api.amadeus.com/v1/security/oauth2/token',
+            'https://api.amadeus.com/v1/security/oauth2/token',
             new URLSearchParams({
                 grant_type: 'client_credentials',
                 client_id: config.amadeusClientId,
@@ -216,14 +219,9 @@ async function getAmadeusAccessToken(): Promise<string> {
                 },
             }
         );
-        console.log('response', response);
-        console.log('response.data', response.data);
-
         const tokenData: AmadeusTokenResponse = response.data;
         cachedToken = tokenData.access_token;
-        // Set expiry to 30 minutes before actual expiry for safety
         tokenExpiry = Date.now() + (tokenData.expires_in - 1800) * 1000;
-        console.log('tokenData', tokenData);
         return tokenData.access_token;
     } catch (error) {
         console.error('Error getting Amadeus access token:', error);
@@ -231,22 +229,24 @@ async function getAmadeusAccessToken(): Promise<string> {
     }
 }
 
-interface HotelsByCity {
-    cityCode: string;
+interface HotelNamePhotoUrl {
+    hotelId: string;
+    photoUrl: string[] | null;
 }
 
 /**
  * Get hotels by city code using Amadeus API
  */
-export async function getHotelsByCity(props: HotelsByCity): Promise<string[]> {
+export async function getHotelsByCity(props: { cityCode: string }): Promise<HotelNamePhotoUrl[]> {
     try {
         const accessToken = await getAmadeusAccessToken();
         
         const response = await axios.get(
-            `https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city`,
+            `https://api.amadeus.com/v1/reference-data/locations/hotels/by-city`,
             {
                 params: {
                     cityCode: props.cityCode,
+                    radius: 50,
                 },
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
@@ -255,9 +255,14 @@ export async function getHotelsByCity(props: HotelsByCity): Promise<string[]> {
         );
 
         const hotelData: AmadeusHotelResponse = response.data;
-        const hotelIds = hotelData.data.map((hotel) => {
-            return hotel.hotelId;
-        })
+        const hotelIds: HotelNamePhotoUrl[] = await Promise.all(hotelData.data.map(async (hotel) => {
+            const photoUrl = await getHotelPhotoUrl(hotel.name, hotel.geoCode.latitude, hotel.geoCode.longitude);
+            console.log('photoUrl', photoUrl);
+            return { 
+                hotelId: hotel.hotelId, 
+                photoUrl: photoUrl 
+            };
+        }));
         return hotelIds;
     } catch (error) {
         console.error('Error fetching hotels from Amadeus:', error);
@@ -278,13 +283,14 @@ export async function getHotelsOffersByCity(props: HotelsOffersByCity): Promise<
         const accessToken = await getAmadeusAccessToken();
         
         const response = await axios.get(
-            `https://test.api.amadeus.com/v3/shopping/hotel-offers`,
+            `https://api.amadeus.com/v3/shopping/hotel-offers`,
             {
                 params: {
                     hotelIds: props.hotelIds.join(','),
                     checkInDate: props.checkInDate,
                     checkOutDate: props.checkOutDate,
                     adults: props.numberOfAdults,
+                    currency: 'USD',
                 },
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
@@ -292,10 +298,10 @@ export async function getHotelsOffersByCity(props: HotelsOffersByCity): Promise<
             }
         );
 
-        const hotelData: AmadeusHotelOffersResponse = response.data;
-        return hotelData.data;
+        const hotelData: AmadeusHotelOffer[] = response.data.data;
+        return hotelData;
     } catch (error) {
-        console.error('Error fetching hotel offers from Amadeus:', error);
+        console.error('Error fetching hotel offers from Amadeus');
         throw new Error('Failed to fetch hotel offers from Amadeus API');
     }
 }
@@ -313,18 +319,29 @@ interface HotelsOffersByCityCode {
  */
 export async function getHotelsOffersByCityCode(props: HotelsOffersByCityCode): Promise<AmadeusHotelOffer[]> {
     try {
-        // First get hotel IDs for the city
         const hotelIds = await getHotelsByCity({ cityCode: props.cityCode });
         
-        // Limit the number of hotels if specified (to avoid API limits)
-        const limitedHotelIds = props.limit ? hotelIds.slice(0, props.limit) : hotelIds.slice(0, 20); // Default limit to 20
-        
-        if (limitedHotelIds.length === 0) {
-            throw new Error(`No hotels found for city code: ${props.cityCode}`);
+        const finalHotelOffers: AmadeusHotelOffer[] = [];
+
+        for (let i = 1; i < 4; i++) {
+            try {
+                const limitedHotelIds = props.limit ? hotelIds.slice(i * 50, (i + 1) * 50) : hotelIds.slice(i * 50, (i + 1) * 50);
+                console.log('limitedHotelIds', limitedHotelIds);
+                const hotelOffers = await getHotelsOffersByCity({ hotelIds: limitedHotelIds.map((hotel) => hotel.hotelId), checkInDate: props.checkInDate, checkOutDate: props.checkOutDate, numberOfAdults: props.numberOfAdults, numberOfChildren: props.numberOfChildren });
+                console.log('hotelOffers', hotelOffers);
+                const hotelOffersWithPhotoUrl = hotelOffers.map((hotelOffer) => {
+                    const photoUrl = limitedHotelIds.find((hotel) => hotel.hotelId === hotelOffer.hotel.hotelId)?.photoUrl;
+                    console.log('photoUrl', photoUrl);
+                    return { ...hotelOffer, photoUrl: photoUrl };
+                });
+                finalHotelOffers.push(...hotelOffersWithPhotoUrl);
+            } catch (error) {
+                console.error('Error fetching hotel offers by city code:', error);
+                continue;
+            }
         }
         
-        // Then get offers for those hotels
-        return await getHotelsOffersByCity({ hotelIds: limitedHotelIds, checkInDate: props.checkInDate, checkOutDate: props.checkOutDate, numberOfAdults: props.numberOfAdults, numberOfChildren: props.numberOfChildren });
+        return finalHotelOffers;
     } catch (error) {
         console.error('Error fetching hotel offers by city code:', error);
         throw new Error('Failed to fetch hotel offers by city code');
@@ -339,7 +356,7 @@ export type {
     AmadeusGeoCode, 
     AmadeusAddress,
     AmadeusHotelOffer,
-    AmadeusHotelOffersResponse,
+    // AmadeusHotelOffersResponse,
     AmadeusOffer,
     AmadeusPrice,
     AmadeusHotelInfo

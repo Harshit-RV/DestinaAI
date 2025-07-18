@@ -3,7 +3,7 @@ import axios from 'axios';
 import config from '../config';
 import { getFlightsData, getReturnFlightsData } from '../utils/getDataFromSerp';
 import { getTripActivities } from '../utils/getTripActivities';
-import { getHotelsByCity, getHotelsOffersByCityCode } from '../utils/getDataFromAmadeus';
+import { getHotelsOffersByCityCode } from '../utils/getDataFromAmadeus';
 const app = Router();
 
 interface TravelPlan {
@@ -87,21 +87,24 @@ app.get('/return-flights'  , async (req, res) : Promise<any> => {
 app.get('/hotels'  , async (req, res) : Promise<any> => {
   try {
     console.log(req.query);
+  
     const { location, checkInDate, checkOutDate, numberOfAdults, numberOfChildren } = req.query as { location: string, hotelPreference: string, interests: string,checkInDate: string, checkOutDate: string, numberOfAdults: string, numberOfChildren: string };
-    
+    const cityCode = location.split(',')[0];
     // Use Amadeus API to get hotels by city name
     const hotelsData = await getHotelsOffersByCityCode({
-      cityCode: location,
+      cityCode: cityCode,
       checkInDate: checkInDate,
       checkOutDate: checkOutDate,
       numberOfAdults: parseInt(numberOfAdults),
       numberOfChildren: parseInt(numberOfChildren),
     });
 
-    return res.send(hotelsData);
+    return res.send({
+      data: hotelsData,
+    });
   } catch (error) {
     console.error('Error fetching hotels data:', error);
-    return res.status(500).send('Error fetching hotels data');
+    return res.status(500).send(error);
   }
 });
 
