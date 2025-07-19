@@ -4,95 +4,8 @@ import { useNavigate } from "react-router-dom";
 import LayoutDiv from "@/components/layout-div";
 import { API_URL } from "@/App";
 import { useTripPlanner } from "@/contexts/TripPlannerContext";
-
-interface Hotel {
-  type: string;
-  hotel: {
-    hotelId: string;
-    chainCode: string;
-    dupeId: string;
-    name: string;
-    cityCode: string;
-    latitude: number;
-    longitude: number;
-  };
-  available: boolean;
-  photoUrl: string[];
-  offers: {
-    id: string;
-    checkInDate: string;
-    checkOutDate: string;
-    rateCode: string;
-    boardType: string;
-    room: {
-      type: string;
-      typeEstimated: {
-        category: string;
-        beds: number;
-        bedType: string;
-      };
-      description: {
-        text: string;
-        lang: string;
-      };
-    };
-    guests: {
-      adults: number;
-    };
-    price: {
-      currency: string;
-      base: string;
-      total: string;
-      taxes: {
-        code: string;
-        percentage?: string;
-        included: boolean;
-        pricingFrequency?: string;
-        pricingMode?: string;
-      }[];
-      variations: {
-        average: {
-          base: string;
-        };
-        changes: {
-          startDate: string;
-          endDate: string;
-          base: string;
-        }[];
-      };
-    };
-    policies: {
-      cancellations: {
-        policyType: string;
-      }[];
-      prepay: {
-        acceptedPayments: {
-          creditCards: string[];
-          methods: string[];
-          creditCardPolicies: {
-            vendorCode: string;
-          }[];
-        };
-      };
-      paymentType: string;
-      refundable: {
-        cancellationRefund: string;
-      };
-    };
-    self: string;
-    roomInformation: {
-      description: string;
-      type: string;
-      typeEstimated: {
-        bedType: string;
-        beds: number;
-        category: string;
-      };
-    };
-  }[];
-  self: string;
-  images: { type: string }[];
-}
+import { Hotel } from "@/types/hotel";
+import { HotelBox } from "@/components/hotel-box";
 
 function ChooseHotel() {
   const navigate = useNavigate();
@@ -131,16 +44,6 @@ function ChooseHotel() {
       setError(null);
       setHotelData([]);
       setIsLoading(true);
-      // const response = await fetch(
-      //   `${API_URL}/travelplan/hotels?` + 
-      //   `interests=&` +
-      //   `location=Paris,Paris,Ile-de-France,France &` +
-      //   `hotelPreference=luxury,pet-friendly&` +
-      //   `checkInDate=2025-06-26&` +
-      //   `checkOutDate=2025-06-28&` +
-      //   `numberOfAdults=2&` +
-      //   `numberOfChildren=0`
-      // );
       const response = await fetch(
         `${API_URL}/travelplan/hotels?` + 
         `location=${arrivalAirportCode}&` +
@@ -290,103 +193,7 @@ function ChooseHotel() {
   );
 }
 
-const HotelBox = ({ 
-  hotel, 
-  selected, 
-  onClick 
-} : { 
-  hotel: Hotel, 
-  selected: boolean, 
-  onClick: () => void 
-}) => {
 
-  // Get the first offer for display
-  const firstOffer = hotel.offers[0];
-  
-  // Format price
-  const priceTotal = firstOffer ? `${firstOffer.price.currency} ${firstOffer.price.total}` : "N/A";
-  
-  // Get room description
-  const roomDescription = firstOffer?.room?.description?.text || firstOffer?.roomInformation?.description || "No description available";
-  
-  // Get room type info
-  const roomType= ""
-  // const roomType = firstOffer?.room?.typeEstimated ? 
-  //   `${firstOffer.room.typeEstimated.category}` : 
-  //   "Room details not available";
-
-  return (
-    <div 
-      onClick={onClick} 
-      className={`flex flex-col md:flex-row border-b w-full items-start md:items-center p-4 md:pr-10 md:justify-between ${selected ? "outline-[#28666E] outline-2 bg-blue-50" : ""} m-0.5 hover:cursor-pointer`}
-    >
-      {/* Hotel Image Placeholder */}
-      {hotel.photoUrl && hotel.photoUrl.length > 0 ? (
-        // <img src={hotel.photoUrl[0]} alt={hotel.hotel.name} className="w-full h-full object-cover rounded-lg md:rounded-none" />
-        <img
-          className="w-full max-w-56 md:w-1/4 max-h-48 md:h-full object-cover rounded-lg md:rounded-none mb-4 md:mb-0"
-          src={hotel.photoUrl[0]}
-          alt={hotel.hotel.name}
-          onError={(e) => {
-            e.currentTarget.src = hotel.photoUrl.length > 1 ? hotel.photoUrl[1] : hotel.photoUrl[0];
-          }}
-        />
-      ) : (
-        <span className="text-gray-500 text-sm">No Image Available</span>
-      )}
-    
-      <div className="flex flex-col w-full md:pl-6">
-        {/* Hotel Information */}
-        <div className="flex flex-col md:flex-row w-full gap-4">
-          {/* Main hotel details */}
-          <div className="flex flex-col sm:flex-row w-full sm:w-full gap-4">
-            <div className="flex flex-col gap-2 flex-1">
-              <div className="text-black font-bold text-lg sm:text-xl">{hotel.hotel.name}</div>
-              <div className="text-gray-400 text-sm line-clamp-2">{roomDescription}</div>
-              <div className="text-gray-600 text-xs">{roomType}</div>
-            </div>
-          </div>
-
-          {/* Hotel Info and Price */}
-          <div className="flex w-full md:w-3/5 justify-around py-2 gap-5">
-            <div className="flex flex-row sm:flex-col justify-between sm:justify-start items-center sm:items-end gap-2 sm:gap-1">
-              <div className="text-gray-500 text-center sm:text-right">
-                <div className="text-sm">{hotel.hotel.cityCode}</div>
-                <div className="text-xs">{hotel.available ? "Available" : "Not Available"}</div>
-              </div>
-            </div>
-
-            {/* Price */}
-            <div className="flex flex-row sm:flex-col justify-between sm:justify-start items-center sm:items-end gap-2 sm:gap-1">
-              <div className="text-gray-600 text-center sm:text-right">
-                <div className="text-xl sm:text-2xl text-black font-bold">{priceTotal}</div>
-                <div className="text-xs sm:text-sm">total price</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Room Features */}
-        <div className="w-full md:hidden sm:col-span-full mt-4 sm:mt-5">
-          <div className="flex flex-wrap gap-2">
-            {firstOffer && (
-              <>
-                <span className="bg-gray-100 px-3 py-1.5 rounded-md text-gray-600 text-xs">
-                  {firstOffer.guests.adults} Adults
-                </span>
-              </>
-            )}
-          </div>
-        </div>
-
-        <div className="mt-5 hidden md:flex text-sm bg-gray-100 px-6 py-1.5 rounded-md text-gray-600 text-xs">
-          ${firstOffer.guests.adults} Adults`
-        </div>
-      </div>
-   
-    </div>
-  );
-};
 
 export default ChooseHotel;
 

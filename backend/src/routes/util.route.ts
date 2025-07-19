@@ -32,7 +32,6 @@ app.get('/get-airport-codes', async (req, res) : Promise<any> => {
     }
   }
 
-  console.log(airportCodes);
   return res.send(airportCodes);
 });
 

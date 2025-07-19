@@ -21,7 +21,6 @@ app.get('/', (req, res) => {
 });
 
 app.get('/activity', async (req, res) : Promise<any> => {
-  console.log(req.query);
   const response = await getTripActivities({
     arrivalCityName: 'New Delhi',
     interests: ['sightseeing'],
@@ -68,7 +67,6 @@ app.get('/flights'  , async (req, res) : Promise<any> => {
 app.get('/return-flights'  , async (req, res) : Promise<any> => {
   try {
     const { departureToken, arrivalAirportId, departureAirportId, returnDate, departureDate } = req.query as { departureToken: string, arrivalAirportId: string, departureAirportId: string, returnDate: string, departureDate: string };
-    console.log(req.query);
     const flightsData = await getReturnFlightsData({
       departureToken: departureToken,
       arrivalAirportId: departureAirportId,
@@ -76,7 +74,6 @@ app.get('/return-flights'  , async (req, res) : Promise<any> => {
       returnDate: returnDate,
       outboundDate: departureDate,
     });
-    console.log(flightsData);
     return res.send(flightsData);
   } catch (error) {
     console.error('Error fetching return flights data:', error);
@@ -85,22 +82,43 @@ app.get('/return-flights'  , async (req, res) : Promise<any> => {
 });
 
 app.get('/hotels'  , async (req, res) : Promise<any> => {
-  try {
-    console.log(req.query);
-  
-    const { location, checkInDate, checkOutDate, numberOfAdults, numberOfChildren } = req.query as { location: string, hotelPreference: string, interests: string,checkInDate: string, checkOutDate: string, numberOfAdults: string, numberOfChildren: string };
+  try {  
+    const { 
+      location, 
+      checkInDate, 
+      checkOutDate, 
+      numberOfAdults, 
+      numberOfChildren,
+      page,
+      limit 
+    } = req.query as { 
+      location: string, 
+      hotelPreference: string, 
+      interests: string,
+      checkInDate: string, 
+      checkOutDate: string, 
+      numberOfAdults: string, 
+      numberOfChildren: string,
+      page?: string,
+      limit?: string
+    };
+    
     const cityCode = location.split(',')[0];
-    // Use Amadeus API to get hotels by city name
-    const hotelsData = await getHotelsOffersByCityCode({
+    
+    // Use Amadeus API to get hotels by city name with pagination
+    const paginatedHotelsData = await getHotelsOffersByCityCode({
       cityCode: cityCode,
       checkInDate: checkInDate,
       checkOutDate: checkOutDate,
       numberOfAdults: parseInt(numberOfAdults),
       numberOfChildren: parseInt(numberOfChildren),
+      page: page ? parseInt(page) : 1,
+      limit: limit ? parseInt(limit) : 10,
     });
 
     return res.send({
-      data: hotelsData,
+      data: paginatedHotelsData.data,
+      pagination: paginatedHotelsData.pagination,
     });
   } catch (error) {
     console.error('Error fetching hotels data:', error);

@@ -2,7 +2,113 @@ import axios from 'axios';
 import config from '../config';
 import { getResponseFromOpenAI } from './getResponseFromOpenAI';
 import { z } from 'zod';
-import { getHotelPhotoUrl } from './google';
+import { getHotelPhotoUrl } from './google-maps';
+
+// Currency conversion types and cache
+interface CurrencyRates {
+    [key: string]: number;
+}
+
+interface FreeCurrencyApiResponse {
+    usd: CurrencyRates;
+}
+
+// Cache for currency rates (valid for 1 hour)
+let cachedRates: CurrencyRates | null = null;
+let ratesExpiry: number = 0;
+
+/**
+ * Fetch latest currency exchange rates from FreeCurrencyAPI
+ */
+async function getCurrencyRates(): Promise<CurrencyRates> {
+    // Check if cached rates are still valid
+    if (cachedRates && Date.now() < ratesExpiry) {
+        return cachedRates;
+    }
+
+    try {
+        const response = await axios.get<FreeCurrencyApiResponse>(
+            'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json',
+        );
+        
+        cachedRates = response.data.usd;
+        // Cache for 1 hour
+        ratesExpiry = Date.now() + (60 * 60 * 1000);
+        
+        return cachedRates;
+    } catch (error) {
+        console.error('Error fetching currency rates:', error);
+        // If we have cached rates, use them even if expired
+        if (cachedRates) {
+            return cachedRates;
+        }
+        throw new Error('Failed to fetch currency exchange rates');
+    }
+}
+
+/**
+ * Convert price from any currency to USD
+ */
+async function convertToUSD(amount: string, fromCurrency: string): Promise<string> {
+    if (fromCurrency === 'USD') {
+        return amount;
+    }
+
+    try {
+        const rates = await getCurrencyRates();
+        const rate = rates[fromCurrency.toLowerCase()];
+        
+        if (!rate) {
+            console.warn(`Exchange rate not found for currency: ${fromCurrency}, keeping original amount`);
+            return amount;
+        }
+
+        // Convert to USD: amount in foreign currency / exchange rate = amount in USD
+        const usdAmount = parseFloat(amount) / rate;
+        return usdAmount.toFixed(2);
+    } catch (error) {
+        console.error(`Error converting ${fromCurrency} to USD:`, error);
+        return amount; // Return original amount if conversion fails
+    }
+}
+
+/**
+ * Convert all prices in an AmadeusPrice object to USD
+ */
+async function convertPriceToUSD(price: AmadeusPrice): Promise<AmadeusPrice> {
+    if (price.currency === 'USD') {
+        return price;
+    }
+
+    try {
+        const convertedBase = await convertToUSD(price.base, price.currency);
+        console.log('converted from', price.currency, 'to', 'USD', convertedBase);
+        const convertedTotal = await convertToUSD(price.total, price.currency);
+        console.log('converted from', price.currency, 'to', 'USD', convertedTotal);
+
+        // Convert price variations
+        const convertedVariations: AmadeusPriceVariations = {
+            average: {
+                base: await convertToUSD(price.variations.average.base, price.currency)
+            },
+            changes: await Promise.all(price.variations.changes.map(async (change) => ({
+                ...change,
+                base: await convertToUSD(change.base, price.currency)
+            })))
+        };
+
+        return {
+            ...price,
+            currency: 'USD',
+            base: convertedBase,
+            total: convertedTotal,
+            variations: convertedVariations
+        };
+    } catch (error) {
+        console.error('Error converting price to USD:', error);
+        return price; // Return original price if conversion fails
+    }
+}
 
 // Types for Amadeus OAuth Token Response
 interface AmadeusTokenResponse {
@@ -237,7 +343,7 @@ interface HotelNamePhotoUrl {
 /**
  * Get hotels by city code using Amadeus API
  */
-export async function getHotelsByCity(props: { cityCode: string }): Promise<HotelNamePhotoUrl[]> {
+export async function getHotelsByCity(props: { cityCode: string, limit: number }): Promise<HotelNamePhotoUrl[]> {
     try {
         const accessToken = await getAmadeusAccessToken();
         
@@ -255,9 +361,11 @@ export async function getHotelsByCity(props: { cityCode: string }): Promise<Hote
         );
 
         const hotelData: AmadeusHotelResponse = response.data;
-        const hotelIds: HotelNamePhotoUrl[] = await Promise.all(hotelData.data.map(async (hotel) => {
+
+        const hotelDataFiltered = hotelData.data.slice(0, props.limit);
+
+        const hotelIds: HotelNamePhotoUrl[] = await Promise.all(hotelDataFiltered.map(async (hotel) => {
             const photoUrl = await getHotelPhotoUrl(hotel.name, hotel.geoCode.latitude, hotel.geoCode.longitude);
-            console.log('photoUrl', photoUrl);
             return { 
                 hotelId: hotel.hotelId, 
                 photoUrl: photoUrl 
@@ -265,7 +373,7 @@ export async function getHotelsByCity(props: { cityCode: string }): Promise<Hote
         }));
         return hotelIds;
     } catch (error) {
-        console.error('Error fetching hotels from Amadeus:', error);
+        console.error('Error fetching hotels from Amadeus');
         throw new Error('Failed to fetch hotels from Amadeus API');
     }
 }
@@ -309,39 +417,114 @@ export async function getHotelsOffersByCity(props: HotelsOffersByCity): Promise<
 interface HotelsOffersByCityCode {
     cityCode: string;
     limit?: number; 
+    page?: number;  // Add page parameter
     checkInDate: string;
     checkOutDate: string;
     numberOfAdults: number;
     numberOfChildren: number;
 }
-/**
- * Get hotel offers by city code (fetches hotel IDs first, then gets offers)
- */
-export async function getHotelsOffersByCityCode(props: HotelsOffersByCityCode): Promise<AmadeusHotelOffer[]> {
-    try {
-        const hotelIds = await getHotelsByCity({ cityCode: props.cityCode });
-        
-        const finalHotelOffers: AmadeusHotelOffer[] = [];
 
-        for (let i = 1; i < 4; i++) {
-            try {
-                const limitedHotelIds = props.limit ? hotelIds.slice(i * 50, (i + 1) * 50) : hotelIds.slice(i * 50, (i + 1) * 50);
-                console.log('limitedHotelIds', limitedHotelIds);
-                const hotelOffers = await getHotelsOffersByCity({ hotelIds: limitedHotelIds.map((hotel) => hotel.hotelId), checkInDate: props.checkInDate, checkOutDate: props.checkOutDate, numberOfAdults: props.numberOfAdults, numberOfChildren: props.numberOfChildren });
-                console.log('hotelOffers', hotelOffers);
-                const hotelOffersWithPhotoUrl = hotelOffers.map((hotelOffer) => {
-                    const photoUrl = limitedHotelIds.find((hotel) => hotel.hotelId === hotelOffer.hotel.hotelId)?.photoUrl;
-                    console.log('photoUrl', photoUrl);
-                    return { ...hotelOffer, photoUrl: photoUrl };
-                });
-                finalHotelOffers.push(...hotelOffersWithPhotoUrl);
-            } catch (error) {
-                console.error('Error fetching hotel offers by city code:', error);
-                continue;
-            }
+// Add pagination response interface
+interface PaginatedHotelOffersResponse {
+    data: AmadeusHotelOffer[];
+    pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+        hasMore: boolean;
+    };
+}
+
+/**
+ * Get hotel offers by city code (fetches hotel IDs first, then gets offers) with pagination
+ */
+export async function getHotelsOffersByCityCode(props: HotelsOffersByCityCode): Promise<PaginatedHotelOffersResponse> {
+    try {
+        // Set defaults
+        const page = props.page || 1;
+        const limit = props.limit || 10;
+        
+        // Get all hotel IDs first (we need to know total count for pagination)
+        const allHotelIds = await getHotelsByCity({ cityCode: props.cityCode, limit: limit });
+        const totalCount = allHotelIds.length;
+        const totalPages = Math.ceil(totalCount / limit);
+        
+        // Calculate pagination bounds
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        
+        // Get the hotels for this page
+        const paginatedHotelIds = allHotelIds.slice(startIndex, endIndex);
+        
+        // console.log(`Fetching hotels for page ${page}, showing ${paginatedHotelIds.length} hotels (${startIndex + 1}-${Math.min(endIndex, totalCount)} of ${totalCount})`);
+        
+        if (paginatedHotelIds.length === 0) {
+            return {
+                data: [],
+                pagination: {
+                    page,
+                    limit,
+                    total: totalCount,
+                    totalPages,
+                    hasMore: false
+                }
+            };
         }
         
-        return finalHotelOffers;
+        try {
+            // Fetch offers for this page's hotels
+            const hotelOffers = await getHotelsOffersByCity({ 
+                hotelIds: paginatedHotelIds.map((hotel) => hotel.hotelId), 
+                checkInDate: props.checkInDate, 
+                checkOutDate: props.checkOutDate, 
+                numberOfAdults: props.numberOfAdults, 
+                numberOfChildren: props.numberOfChildren 
+            });
+                        
+            // Add photo URLs and convert prices to USD
+            const hotelOffersWithPhotoUrl = await Promise.all(hotelOffers.map(async (hotelOffer) => {
+                const photoUrl = paginatedHotelIds.find((hotel) => hotel.hotelId === hotelOffer.hotel.hotelId)?.photoUrl;
+                
+                // Convert all offer prices to USD
+                const convertedOffers = await Promise.all(hotelOffer.offers.map(async (offer) => ({
+                    ...offer,
+                    price: await convertPriceToUSD(offer.price)
+                })));
+                
+                return { 
+                    ...hotelOffer, 
+                    photoUrl: photoUrl,
+                    offers: convertedOffers
+                };
+            }));
+            
+            return {
+                data: hotelOffersWithPhotoUrl,
+                pagination: {
+                    page,
+                    limit,
+                    total: totalCount,
+                    totalPages,
+                    hasMore: page < totalPages
+                }
+            };
+            
+        } catch (error) {
+            console.error(`Error fetching hotel offers for page ${page}:`, error);
+            // Return empty results but with correct pagination info
+            return {
+                data: [],
+                pagination: {
+                    page,
+                    limit,
+                    total: totalCount,
+                    totalPages,
+                    hasMore: page < totalPages
+                }
+            };
+        }
+        
     } catch (error) {
         console.error('Error fetching hotel offers by city code:', error);
         throw new Error('Failed to fetch hotel offers by city code');
@@ -359,5 +542,6 @@ export type {
     // AmadeusHotelOffersResponse,
     AmadeusOffer,
     AmadeusPrice,
-    AmadeusHotelInfo
+    AmadeusHotelInfo,
+    PaginatedHotelOffersResponse  // Export the new pagination type
 }; 

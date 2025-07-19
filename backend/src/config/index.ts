@@ -8,5 +8,6 @@ export default {
     serpApiKey: process.env.SERP_API_KEY || '',
     amadeusClientId: process.env.AMADEUS_CLIENT_ID || '',
     amadeusClientSecret: process.env.AMADEUS_CLIENT_SECRET || '',
-    googleApiKey: process.env.GOOGLE_API_KEY || '',
+    googleApiKey: process.env.GOOGLE_KEY_KEY || '',
+    freeCurrencyApiKey: process.env.FREE_CURRENCY_API_KEY || 'fca_live_dMw6ZZQs1UNxSGHXqOrHHCtcc2klMA7ixqeKKbvR',
 };
