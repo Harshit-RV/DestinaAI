@@ -9,6 +9,7 @@ import Signup from "./pages/Signup";
 import { SignedIn, SignedOut } from "@clerk/clerk-react";
 import TripPlanner from "./pages/TripPlanner";
 import NavBarItem from "@/components/navbar-item";
+import PlanYourTrip from './pages/PlanYourTrip';
 
 export const API_URL = "http://localhost:3000";
 // export const API_URL = "https://z2bt85w1-3000.inc1.devtunnels.ms";
@@ -56,6 +57,7 @@ function App() {
           <Route path="/choose-hotel" element={<ChooseHotel />} />
           <Route path="/trip-summary" element={<TripSummary />} />
           <Route path="/trip-planner" element={<TripPlanner />} />
+          <Route path="/plan-your-trip" element={<PlanYourTrip />} />
           <Route path="/sign-in" element={<Signin />} />
           <Route path="/sign-up" element={<Signup />} />
         </Routes>
