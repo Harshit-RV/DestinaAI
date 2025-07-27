@@ -18,7 +18,8 @@ function ChooseFlight({ type = 'outbound' }: { type: "outbound" | "return" }) {
     selectedOutboundFlight,
     setSelectedOutboundFlight,
     setSelectedReturnFlight,
-    setDestinationArrivalTime
+    setDestinationArrivalTime,
+    setReturnDateTime
   } = useTripPlanner();
 
   const [selectedFlight, setSelectedFlight] = useState<number>(0);
@@ -93,6 +94,7 @@ function ChooseFlight({ type = 'outbound' }: { type: "outbound" | "return" }) {
       navigate('/choose-return-flight');
     } else {
       setSelectedReturnFlight(selectedFlightData);
+      setReturnDateTime(selectedFlightData.flights[0].departure_airport.time)
       navigate('/choose-hotel');
     }
   };

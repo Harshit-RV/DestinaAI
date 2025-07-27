@@ -1,4 +1,5 @@
 import { FlightData } from '@/pages/ChooseFlight';
+import { Hotel } from '@/types/hotel';
 import { createContext, useContext, useState, ReactNode, SetStateAction, Dispatch } from 'react';
 
 interface Activity {
@@ -460,9 +461,10 @@ interface TripPlannerContextType {
 
   // Arrival time in destination city (for outbound flight)
   destinationArrivalTime: string;
+  returnDateTime: string;
 
   // Selected hotel
-  selectedHotel: unknown | null;
+  selectedHotel: Hotel | null;
 
   // Day plans
   dayPlan: DayPlan[];
@@ -486,9 +488,10 @@ interface TripPlannerContextType {
   setSelectedOutboundFlight: Dispatch<SetStateAction<FlightData | null>>;
   setSelectedReturnFlight: Dispatch<SetStateAction<FlightData | null>>;
   setDestinationArrivalTime: Dispatch<SetStateAction<string>>;
-  setSelectedHotel: Dispatch<SetStateAction<unknown>>;
+  setSelectedHotel: Dispatch<SetStateAction<Hotel>>;
   setDestinationCityCommonName: Dispatch<SetStateAction<string>>;
   setDayPlan: Dispatch<SetStateAction<DayPlan[]>>;
+  setReturnDateTime:  Dispatch<SetStateAction<string>>
 }
 
 const TripPlannerContext = createContext<TripPlannerContextType | undefined>(undefined);
@@ -524,8 +527,9 @@ export function TripPlannerProvider({ children }: { children: ReactNode }) {
   const [selectedOutboundFlight, setSelectedOutboundFlight] = useState<FlightData | null>(null);
   const [selectedReturnFlight, setSelectedReturnFlight] = useState<FlightData | null>(null);
   const [destinationArrivalTime, setDestinationArrivalTime] = useState('');
+  const [returnDateTime, setReturnDateTime] = useState('');
   const [destinationCityCommonName, setDestinationCityCommonName] = useState('');
-  const [selectedHotel, setSelectedHotel] = useState<unknown | null>(null);
+  const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
   const [dayPlan, setDayPlan] = useState<DayPlan[]>(defaultDayPlan);
 
   return (
@@ -549,6 +553,7 @@ export function TripPlannerProvider({ children }: { children: ReactNode }) {
         destinationArrivalTime,
         destinationCityCommonName,
         dayPlan,
+        returnDateTime,
         setDepartureLocation,
         setArrivalLocation,
         setDepartureDate,
@@ -567,6 +572,7 @@ export function TripPlannerProvider({ children }: { children: ReactNode }) {
         setDestinationArrivalTime,
         setDestinationCityCommonName,
         setDayPlan,
+        setReturnDateTime
       }}
     >
       {children}

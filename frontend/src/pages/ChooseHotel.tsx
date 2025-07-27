@@ -20,6 +20,7 @@ function ChooseHotel() {
     numberOfAdults,
     arrivalAirportCode,
     numberOfChildren,
+    setSelectedHotel,
   } = useTripPlanner();
 
 
@@ -68,7 +69,7 @@ function ChooseHotel() {
   }
 
   const handleContinue = () => {
-    navigate('/trip-summary');
+    navigate('/plan-your-trip');
   };
 
   useEffect(() => {
@@ -173,7 +174,10 @@ function ChooseHotel() {
               key={hotel.hotel.hotelId}
               hotel={hotel}
               selected={hotel.hotel.hotelId === selectedHotelId}
-              onClick={() => setSelectedHotelId(hotel.hotel.hotelId)}
+              onClick={() => {
+                setSelectedHotelId(hotel.hotel.hotelId)
+                setSelectedHotel(hotel)
+              }}
             />
           ))}
         </div>

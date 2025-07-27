@@ -21,19 +21,63 @@ app.get('/', (req, res) => {
 });
 
 app.get('/activity', async (req, res) : Promise<any> => {
-  const response = await getTripActivities({
-    arrivalCityName: 'New Delhi',
-    interests: ['sightseeing'],
-    numberOfChildren: 0,
-    numberOfAdults: 2,
-    arrivalTime: '2025-08-09 21:30',
-    departureTime: '2025-08-19 21:30',
-    hotelName: 'Hyatt Centric, Janakpuri',
-    hotelLatitude: 28.6289,
-    hotelLongitude: 77.0785,
-    numberOfDays: 10,
-  });
-  res.json(response);
+  try {
+    const { 
+      cityName, 
+      interests, 
+      children, 
+      adults, 
+      arrivalTime, 
+      departureTime, 
+      hotelName, 
+      hotelLatitude, 
+      hotelLongitude 
+    } = req.query as { 
+      cityName: string, 
+      interests: string, 
+      children: string, 
+      adults: string, 
+      arrivalTime: string, 
+      departureTime: string, 
+      hotelName: string, 
+      hotelLatitude: string, 
+      hotelLongitude: string 
+    };
+
+    // Calculate number of days from arrival and departure times
+    const calculateNumberOfDays = (arrival: string, departure: string): number => {
+      const arrivalDate = new Date(arrival.replace(' ', 'T'));
+      const departureDate = new Date(departure.replace(' ', 'T'));
+      
+      // Calculate difference in milliseconds
+      const timeDifference = departureDate.getTime() - arrivalDate.getTime();
+      
+      // Convert to days and round up to ensure we get at least 1 day
+      const daysDifference = Math.ceil(timeDifference / (1000 * 3600 * 24));
+      
+      return Math.max(1, daysDifference); // Ensure at least 1 day
+    };
+
+    const numberOfDays = calculateNumberOfDays(arrivalTime, departureTime);
+
+    const response = await getTripActivities({
+      arrivalCityName: cityName,
+      interests: interests ? interests.split(',') : [],
+      numberOfChildren: parseInt(children) || 0,
+      numberOfAdults: parseInt(adults) || 1,
+      arrivalTime: arrivalTime,
+      departureTime: departureTime,
+      hotelName: hotelName || '',
+      hotelLatitude: parseFloat(hotelLatitude) || 0,
+      hotelLongitude: parseFloat(hotelLongitude) || 0,
+      numberOfDays: numberOfDays,
+    });
+    
+    res.json(response);
+  } catch (error) {
+    console.error('Error fetching activities:', error);
+    res.status(500).json({ error: 'Failed to fetch activities' });
+  }
 });
 
 app.get('/search', async (req, res) : Promise<any> => {

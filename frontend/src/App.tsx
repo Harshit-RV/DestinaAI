@@ -6,7 +6,7 @@ import ChooseHotel from './pages/ChooseHotel';
 import TripSummary from './pages/TripSummary';
 import Signin from "./pages/Signin";
 import Signup from "./pages/Signup";
-import { SignedIn, SignedOut } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
 import TripPlanner from "./pages/TripPlanner";
 import NavBarItem from "@/components/navbar-item";
 import PlanYourTrip from './pages/PlanYourTrip';
@@ -18,35 +18,12 @@ function App() {
   return (
     <TripPlannerProvider>
       <div className="h-screen flex w-full bg-[#F6F6F6]">
-        <SignedOut>
-          <div className="w-56 hidden md:flex flex-col items-center p-6 gap-6">
-            <img
-              className="h-20 w-20 rounded-full object-cover"
-              src="https://letsenhance.io/static/73136da51c245e80edc6ccfe44888a99/1015f/MainBefore.jpg"
-              alt=""
-            />
-            <div className="flex flex-col gap-3 w-full">
-              <NavBarItem title="Home" />
-              <NavBarItem title="Home" />
-              <NavBarItem title="Home" />
-              <NavBarItem title="Home" />
-              <NavBarItem title="Home" />
-            </div>
-          </div>
-        </SignedOut>
         <SignedIn>
-          <div className="w-56 hidden md:flex flex-col items-center p-6 gap-6">
-            <img
-              className="h-20 w-20 rounded-full object-cover"
-              src="https://letsenhance.io/static/73136da51c245e80edc6ccfe44888a99/1015f/MainBefore.jpg"
-              alt=""
-            />
-            <div className="flex flex-col gap-3 w-full">
+          <div className="w-56 hidden md:flex flex-col py-6 px-3 gap-6">
+            <UserButton/>
+            <div className="flex flex-col justify-start gap-3 w-full">
               <NavBarItem title="Home" />
-              <NavBarItem title="Home" />
-              <NavBarItem title="Home" />
-              <NavBarItem title="Home" />
-              <NavBarItem title="Home" />
+              <NavBarItem title="Trips" />
             </div>
           </div>
         </SignedIn>
