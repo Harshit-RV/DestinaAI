@@ -76,51 +76,46 @@ app.get('/activity', async (req, res) : Promise<any> => {
   }
 });
 
-app.get('/finalize-plan', async (req, res) : Promise<any> => {
+app.post('/finalize-plan', async (req, res) : Promise<any> => {
   try {
-    // const { 
-    //   activities, 
-    //   cityName, 
-    //   interests, 
-    //   children, 
-    //   adults, 
-    //   arrivalTime, 
-    //   departureTime, 
-    //   hotelName, 
-    //   hotelLatitude, 
-    //   hotelLongitude 
-    // } = req.body as { 
-    //   activities: any[], 
-    //   cityName: string, 
-    //   interests: string[], 
-    //   children: number, 
-    //   adults: number, 
-    //   arrivalTime: string, 
-    //   departureTime: string, 
-    //   hotelName: string, 
-    //   hotelLatitude: number, 
-    //   hotelLongitude: number 
-    // };
+    const { 
+      activities, 
+      cityName, 
+      interests, 
+      children, 
+      adults, 
+      arrivalTime, 
+      departureTime, 
+      hotelName, 
+      hotelLatitude, 
+      hotelLongitude,
+    } = req.body as { 
+      cityName: string, 
+      interests: string[], 
+      children: number, 
+      adults: number, 
+      arrivalTime: string, 
+      departureTime: string, 
+      hotelName: string, 
+      hotelLatitude: number, 
+      hotelLongitude: number,
+      activities: any[]
+    };
 
-    // const numberOfDays = calculateNumberOfDays(arrivalTime, departureTime);
-
-    // // Convert kanban activities to a readable format for GPT
-    // const activitiesText = activities.map((day, index) => 
-    //   `Day ${index + 1} (${day.title}): ${day.items.map((item: any) => item.content).join(', ')}`
-    // ).join('\n');
+    const numberOfDays = calculateNumberOfDays(arrivalTime, departureTime);
 
     const response = await getFinalPlan({
-      arrivalCityName: "Delhi",
-      interests: [],
-      numberOfChildren: 0,
-      numberOfAdults: 2,
-      arrivalTime: "2025-09-28 15:15",
-      departureTime: "2025-10-4 15:15",
-      hotelName: "Best Western Darbar",
-      hotelLatitude: 28,
-      hotelLongitude: 40,
-      numberOfDays: 7,
-      finalizedActivities: [],
+      arrivalCityName: cityName,
+      interests: interests,  
+      numberOfChildren: children,
+      numberOfAdults: adults,
+      arrivalTime: arrivalTime,
+      departureTime: departureTime,
+      hotelName: hotelName,
+      hotelLatitude: hotelLatitude,
+      hotelLongitude: hotelLongitude,
+      numberOfDays: numberOfDays,
+      activities: activities,
     });
     
     res.json(response);

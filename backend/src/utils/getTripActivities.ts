@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { getResponseFromOpenAI } from "./getResponseFromOpenAI";
+import { getResponseFromGemini } from "./getResponseFromGemini";
 
-interface getFinalPlanInput {
+interface getTripActivitiesInput {
   arrivalCityName: string;
   interests: string[];
   numberOfChildren: number;
@@ -14,8 +15,12 @@ interface getFinalPlanInput {
   numberOfDays: number;
 }
 
+interface getFinalPlanInput extends getTripActivitiesInput {
+  activities: any[];
+}
+
 export const getFinalPlan = async (input: getFinalPlanInput) => {
-  const response = await getResponseFromOpenAI({
+  const response = await getResponseFromGemini({
     schema: z.object({
       dayPlan: z.array(z.object({
         title: z.string(),
@@ -40,11 +45,15 @@ input:
 city name, interests, arrival time, departure time, hotel info (including name, latitude, longitude),  number of children, adults, 
 
 your task:    
-list of activities that align with interests and age groups specified organised day by day with estimated prices and in efficient order of travel. include places to eat, hang around, view, and everyone beyond
+your task is to take this list of activities and organise them day by day with estimated prices and in efficient order of travel. include places to eat, hang around, view, and everyone beyond
 add method of transport as well, add it as an activity only because travel can also take time. the order of the days should be in the order of the arrival and departure time. do not mess up the order of the days.
 Do not write number of day in the title.
 
-give me a plan for ${input.numberOfDays} days. no less, no more.
+DO NOT CHANGE THE ACTIVITIES IN THE LIST. DO NOT ADD OR REMOVE ANY ACTIVITIES. 
+
+JUST REARRANGE THEM IN THEIR SPECIFIC DAY ITSELF BY TIME
+
+LIST OF ACTIVITIES:${JSON.stringify(input.activities, null, 2)}
 
 structure to follow:
  schema: z.object({
@@ -69,16 +78,17 @@ type can be food, activity, transport
 
 make sure to count the number of days based on the arrival and departure time
 `,
-    // instruction: "Get the only IATA airport codes for the given city name (only return the 3 letter code of the airport, and only one entry for one aiport). Return the airport code for only the specified city. Return neighbouring cities airports if and only if the city specified has no commercial airport.",
-    // instruction: "Return only the 3-letter IATA airport code for the specified city. Do not return any 4-letter ICAO codes. Do not return multiple codes for the same airport. Return only one IATA code per airport. Only include airports located in the specified city. If the specified city does not have a commercial airport, return the nearest city’s commercial airport’s IATA code. Return only the 3-letter IATA code, nothing else — no airport name, no location, no explanation. Do not return any private or non-commercial airports. Return the departure city name and the arrival city name in their most common form (for eg. Paris as a city, France as a country instead of Paris, Paris, France and Dubai as a city, United Arab Emirates as a country instead of Dubai, Dubai, United Arab Emirates and Paris as a city, France as a country instead of Paris,Paris,Ile-de-France
     prompt: `Arrival city: ${input.arrivalCityName}, Departure time: ${input.departureTime}, Arrival time: ${input.arrivalTime}, Hotel name: ${input.hotelName}, Hotel latitude: ${input.hotelLatitude}, Hotel longitude: ${input.hotelLongitude}, Interests: ${input.interests}, Number of children: ${input.numberOfChildren}, Number of adults: ${input.numberOfAdults}`,
   });
+  
   return response;
 }
 
-
-export const getTripActivities = async (input: getFinalPlanInput) => {
-  const response = await getResponseFromOpenAI({
+export const getTripActivities = async (input: getTripActivitiesInput) => {
+  try {
+    console.log("getTripActivities called with input:", JSON.stringify(input, null, 2));
+    
+    const response = await getResponseFromGemini({
     schema: z.object({
       activitiesByDays: z.array(z.object({
         id: z.string(),
@@ -94,29 +104,38 @@ export const getTripActivities = async (input: getFinalPlanInput) => {
       })).min(input.numberOfDays),
     }),
     
-    instruction: `
+    instruction: `Generate a ${input.numberOfDays}-day itinerary for a drag-and-drop trip planner.
 
-input:
-city name, interests, arrival time, departure time, hotel info (including name, latitude, longitude),  number of children, adults, 
+REQUIRED OUTPUT: JSON object with "activitiesByDays" array containing exactly ${input.numberOfDays} day objects.
 
-your task:    
-Generate a daily list of activities based on the user’s interests and age group. Organize the itinerary day by day in the correct chronological order, strictly based on arrival and departure time.
+Each day object MUST have:
+- id: string (e.g., "day-1", "day-2", etc.)
+- title: string (e.g., "Day 1: Arrival & Local Exploration")
+- color: string (hex color like "#FF5733")
+- maxActivities: number (set to 10)
+- items: array of activity objects
 
-give me a plan for ${input.numberOfDays} days. no less, no more.
+Each activity item MUST have:
+- id: string (unique identifier)
+- color: string (hex color, use "#FFFFFF" for individual activities)
+- content: string (brief activity name)
+- description: string (detailed description)
 
-Your response will be used in a drag-and-drop itinerary planner, so follow these strict formatting and structural rules:
+SPECIAL REQUIREMENTS:
+1. Day 1 MUST start with hotel check-in activity
+2. Last day MUST end with hotel check-out activity
+3. Group related activities with same color (e.g., nearby restaurants, connected attractions)
+4. Individual activities use color "#FFFFFF"
+5. Each day should have 4-8 activities including meals and transport
+6. Include realistic timing and locations based on the hotel position
 
-🧭 Organization
-	•	THE FIRST ACTIVITY MUST BE THE HOTEL CHECK IN AND THE LAST ACTIVITY MUST BE THE HOTEL CHECK OUT. 
-  other activities can be dragged around.
-
-🧩 Grouping & Color Coding
-	•	If two or more activities are geographically close or logically connected, they should be grouped as a single activity item so the user can drag them together.
-	•	If an activity is not logically grouped, assign it color #FFFFFF (white).
-`,
-    // instruction: "Get the only IATA airport codes for the given city name (only return the 3 letter code of the airport, and only one entry for one aiport). Return the airport code for only the specified city. Return neighbouring cities airports if and only if the city specified has no commercial airport.",
-    // instruction: "Return only the 3-letter IATA airport code for the specified city. Do not return any 4-letter ICAO codes. Do not return multiple codes for the same airport. Return only one IATA code per airport. Only include airports located in the specified city. If the specified city does not have a commercial airport, return the nearest city’s commercial airport’s IATA code. Return only the 3-letter IATA code, nothing else — no airport name, no location, no explanation. Do not return any private or non-commercial airports. Return the departure city name and the arrival city name in their most common form (for eg. Paris as a city, France as a country instead of Paris, Paris, France and Dubai as a city, United Arab Emirates as a country instead of Dubai, Dubai, United Arab Emirates and Paris as a city, France as a country instead of Paris,Paris,Ile-de-France
+INPUT DATA: City: ${input.arrivalCityName}, Hotel: ${input.hotelName}, Adults: ${input.numberOfAdults}, Children: ${input.numberOfChildren}, Interests: ${input.interests.join(', ')}, Arrival: ${input.arrivalTime}, Departure: ${input.departureTime}`,
     prompt: `Arrival city: ${input.arrivalCityName}, Departure time: ${input.departureTime}, Arrival time: ${input.arrivalTime}, Hotel name: ${input.hotelName}, Hotel latitude: ${input.hotelLatitude}, Hotel longitude: ${input.hotelLongitude}, Interests: ${input.interests}, Number of children: ${input.numberOfChildren}, Number of adults: ${input.numberOfAdults}`,
   });
+  
   return response;
+} catch (e) {
+  console.log(e)
+  return null;
+}
 }
