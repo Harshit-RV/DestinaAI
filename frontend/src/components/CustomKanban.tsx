@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { Dispatch, SetStateAction, useState } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
 interface KanbanItem {
@@ -18,7 +18,7 @@ export interface KanbanColumn {
 
 
 
-export const CustomKanban = ({ initialData } : { initialData: KanbanColumn[] }) => {
+export const CustomKanban = ({ initialData, setActivities } : { initialData: KanbanColumn[], setActivities: Dispatch<SetStateAction<KanbanColumn[]>> }) => {
   const [columns, setColumns] = useState<KanbanColumn[]>(initialData);
 
   const handleDragEnd = (result: DropResult) => {
@@ -42,6 +42,7 @@ export const CustomKanban = ({ initialData } : { initialData: KanbanColumn[] }) 
       );
 
       setColumns(newColumns);
+      setActivities(newColumns)
     } else {
       // Moving between different columns
       const sourceColumn = columns.find(col => col.id === source.droppableId);
@@ -64,6 +65,7 @@ export const CustomKanban = ({ initialData } : { initialData: KanbanColumn[] }) 
       });
 
       setColumns(newColumns);
+      setActivities(newColumns);
     }
   };
 

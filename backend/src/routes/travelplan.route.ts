@@ -2,7 +2,7 @@ import { Router } from 'express';
 import axios from 'axios';
 import config from '../config';
 import { getFlightsData, getReturnFlightsData } from '../utils/getDataFromSerp';
-import { getTripActivities } from '../utils/getTripActivities';
+import { getTripActivities, getFinalPlan } from '../utils/getTripActivities';
 import { getHotelsOffersByCityCode } from '../utils/getDataFromAmadeus';
 const app = Router();
 
@@ -13,6 +13,16 @@ interface TravelPlan {
   endDate: string;
   note: string;
 }
+
+const calculateNumberOfDays = (arrival: string, departure: string): number => {
+  const arrivalDate = new Date(arrival.replace(' ', 'T'));
+  const departureDate = new Date(departure.replace(' ', 'T'));
+  
+  const timeDifference = departureDate.getTime() - arrivalDate.getTime();
+  const daysDifference = Math.ceil(timeDifference / (1000 * 3600 * 24));
+  
+  return Math.max(1, daysDifference); // Ensure at least 1 day
+};
 
 const travelplans: TravelPlan[] = [];
 
@@ -44,20 +54,6 @@ app.get('/activity', async (req, res) : Promise<any> => {
       hotelLongitude: string 
     };
 
-    // Calculate number of days from arrival and departure times
-    const calculateNumberOfDays = (arrival: string, departure: string): number => {
-      const arrivalDate = new Date(arrival.replace(' ', 'T'));
-      const departureDate = new Date(departure.replace(' ', 'T'));
-      
-      // Calculate difference in milliseconds
-      const timeDifference = departureDate.getTime() - arrivalDate.getTime();
-      
-      // Convert to days and round up to ensure we get at least 1 day
-      const daysDifference = Math.ceil(timeDifference / (1000 * 3600 * 24));
-      
-      return Math.max(1, daysDifference); // Ensure at least 1 day
-    };
-
     const numberOfDays = calculateNumberOfDays(arrivalTime, departureTime);
 
     const response = await getTripActivities({
@@ -77,6 +73,60 @@ app.get('/activity', async (req, res) : Promise<any> => {
   } catch (error) {
     console.error('Error fetching activities:', error);
     res.status(500).json({ error: 'Failed to fetch activities' });
+  }
+});
+
+app.get('/finalize-plan', async (req, res) : Promise<any> => {
+  try {
+    // const { 
+    //   activities, 
+    //   cityName, 
+    //   interests, 
+    //   children, 
+    //   adults, 
+    //   arrivalTime, 
+    //   departureTime, 
+    //   hotelName, 
+    //   hotelLatitude, 
+    //   hotelLongitude 
+    // } = req.body as { 
+    //   activities: any[], 
+    //   cityName: string, 
+    //   interests: string[], 
+    //   children: number, 
+    //   adults: number, 
+    //   arrivalTime: string, 
+    //   departureTime: string, 
+    //   hotelName: string, 
+    //   hotelLatitude: number, 
+    //   hotelLongitude: number 
+    // };
+
+    // const numberOfDays = calculateNumberOfDays(arrivalTime, departureTime);
+
+    // // Convert kanban activities to a readable format for GPT
+    // const activitiesText = activities.map((day, index) => 
+    //   `Day ${index + 1} (${day.title}): ${day.items.map((item: any) => item.content).join(', ')}`
+    // ).join('\n');
+
+    const response = await getFinalPlan({
+      arrivalCityName: "Delhi",
+      interests: [],
+      numberOfChildren: 0,
+      numberOfAdults: 2,
+      arrivalTime: "2025-09-28 15:15",
+      departureTime: "2025-10-4 15:15",
+      hotelName: "Best Western Darbar",
+      hotelLatitude: 28,
+      hotelLongitude: 40,
+      numberOfDays: 7,
+      finalizedActivities: [],
+    });
+    
+    res.json(response);
+  } catch (error) {
+    console.error('Error finalizing plan:', error);
+    res.status(500).json({ error: 'Failed to finalize plan' });
   }
 });
 

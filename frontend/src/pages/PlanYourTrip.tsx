@@ -4,11 +4,14 @@ import { API_URL } from "@/App";
 import { Button } from "@/components/ui/button";
 import LayoutDiv from "@/components/layout-div";
 import { useTripPlanner } from "@/contexts/TripPlannerContext";
+import { useNavigate } from "react-router-dom";
+import { v4 as uuidv4 } from 'uuid';
 
 const PlanYourTrip = () => {
-  const [error, setError] = useState<string | null>(null);
   const [activities, setActivities] = useState<KanbanColumn[]>([]);
   const [loading, setLoading] = useState(false);
+  const [finalizing, setFinalizing] = useState(false);
+  const navigate = useNavigate();
 
   const {
     destinationCityCommonName,
@@ -18,11 +21,11 @@ const PlanYourTrip = () => {
     selectedHotel,
     numberOfChildren,
     numberOfAdults,
+    setDayPlan,
   } = useTripPlanner();
 
   const fetchActivities = async () => {
     try {
-      setError(null);
       setActivities([]);
       setLoading(true);
       const response = await fetch(
@@ -42,7 +45,7 @@ const PlanYourTrip = () => {
       const activitiesByDay: KanbanColumn[] = data.parsed.activitiesByDays 
       console.log({activitiesByDay})
 
-      const filteredActivities = activitiesByDay.map((day, index) => {
+      let filteredActivities = activitiesByDay.map((day, index) => {
         if (index === 0) {
           return { ...day, items: day.items.slice(1) };
         }
@@ -51,14 +54,65 @@ const PlanYourTrip = () => {
         }
         return day;
       })
-      console.log({filteredActivities})
-
       
+      filteredActivities = filteredActivities.map((value) => {
+        return {
+          ...value,
+          id: uuidv4(),
+          items: value.items.map((item) => {
+            return {
+              ...item,
+              id: uuidv4(),
+            }
+          })
+        }
+      })
+
+      console.log({filteredActivities})
       setActivities(filteredActivities);
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching flights:', error);
-      setError(JSON.stringify(error));
+      console.error('Error fetching activities:', error);
+      setLoading(false);
+    }
+  }
+
+  const finalizePlan = async () => {
+    try {
+      setFinalizing(true);
+      const activitiesToSend = activities;
+      console.log({activities})
+      
+      const response = await fetch(`${API_URL}/travelplan/finalize-plan`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          activities: activitiesToSend,
+          cityName: destinationCityCommonName,
+          interests: interests,
+          children: numberOfChildren,
+          adults: numberOfAdults,
+          arrivalTime: destinationArrivalTime,
+          departureTime: returnDateTime,
+          hotelName: selectedHotel?.hotel?.name || '',
+          hotelLatitude: selectedHotel?.hotel?.latitude || 0,
+          hotelLongitude: selectedHotel?.hotel?.longitude || 0,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.parsed && data.parsed.dayPlan) {
+        setDayPlan(data.parsed.dayPlan);
+        navigate('/trip-summary');
+      }
+      
+      setFinalizing(false);
+    } catch (error) {
+      console.error('Error finalizing plan:', error);
+      setFinalizing(false);
     }
   }
 
@@ -70,7 +124,13 @@ const PlanYourTrip = () => {
     <LayoutDiv className="overflow-scroll">
         <div className="flex w-full justify-between items-center">
             <div className="text-2xl font-bold">Plan Your Trip</div>
-            <Button disabled={loading} className="px-8">Finish Planning</Button>
+            <Button 
+              disabled={loading || finalizing} 
+              className="px-8"
+              onClick={finalizePlan}
+            >
+              {finalizing ? 'Preparing final plan...' : 'Finalize'}
+            </Button>
         </div>
         {
             loading ? (    
@@ -85,7 +145,10 @@ const PlanYourTrip = () => {
                     </div>
                 </div>
             ) : (
-                <CustomKanban initialData={activities} />
+                <CustomKanban 
+                  initialData={activities}
+                  setActivities={setActivities}
+                />
             )
         }
         <div className="h-14"></div>

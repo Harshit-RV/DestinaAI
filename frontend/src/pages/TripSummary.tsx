@@ -115,21 +115,21 @@ function TripSummary() {
         )}
 
         {/* Hotel */}
-        {!!selectedHotel && (
+        {selectedHotel && (
           <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
             <h2 className="text-2xl font-bold mb-4">Hotel</h2>
             <div className="flex justify-between items-center">
               <div>
                 <p className="text-gray-600">Hotel Name</p>
-                <p className="font-semibold">{(selectedHotel as Record<string, any>)?.name || 'Hotel Name'}</p>
+                <p className="font-semibold">{selectedHotel.hotel?.name || 'Hotel Name'}</p>
               </div>
               <div>
                 <p className="text-gray-600">Location</p>
-                <p className="font-semibold">{(selectedHotel as Record<string, any>)?.location || 'Location'}</p>
+                <p className="font-semibold">{selectedHotel.hotel?.cityCode || 'Location'}</p>
               </div>
               <div>
                 <p className="text-gray-600">Price per Night</p>
-                <p className="font-semibold">${(selectedHotel as Record<string, any>)?.price || 'N/A'}</p>
+                <p className="font-semibold">${selectedHotel.offers?.[0]?.price?.total || 'N/A'}</p>
               </div>
             </div>
           </div>
