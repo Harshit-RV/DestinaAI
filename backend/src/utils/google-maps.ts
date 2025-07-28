@@ -1,6 +1,6 @@
 import config from "../config";
 
-const googleApiKey = "";
+const googleApiKey = "AIzaSyAK6_VUmR2XBmpgn91rf54ulxC0wruOd3I";
 
 async function getPlaceId(hotelName: string, latitude: number, longitude: number): Promise<string | null> {
   const input = encodeURIComponent(hotelName);

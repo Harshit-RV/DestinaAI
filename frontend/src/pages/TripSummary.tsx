@@ -19,7 +19,8 @@ function TripSummary() {
     selectedOutboundFlight,
     selectedReturnFlight,
     selectedHotel,
-    dayPlan
+    dayPlan,
+    planChanges
   } = useTripPlanner();
 
   const formatDate = (dateString: string) => {
@@ -94,6 +95,9 @@ function TripSummary() {
                 </div>
               </div>
             </div>
+
+            {/* Plan Changes */}
+            
 
             {/* Flights */}
             <div className="space-y-4">
@@ -227,6 +231,25 @@ function TripSummary() {
                 </div>
               </div>
             </div>
+            {planChanges && planChanges.length > 0 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 className="text-sm font-medium text-blue-800 mb-2 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                  Itinerary adjustments made
+                </h3>
+                <ul className="space-y-1 text-sm text-blue-700">
+                  {planChanges.map((change, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <span className="text-blue-400 mt-1">•</span>
+                      <span>
+                        <strong>{change.activityName}</strong> moved from {change.originalDay} to {change.newDay} 
+                        <span className="text-blue-600"> - {change.reason}</span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
 

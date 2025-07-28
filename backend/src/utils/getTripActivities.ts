@@ -20,6 +20,7 @@ interface getFinalPlanInput extends getTripActivitiesInput {
 }
 
 export const getFinalPlan = async (input: getFinalPlanInput) => {
+  console.log({input: JSON.stringify(input, null, 2)})
   const response = await getResponseFromGemini({
     schema: z.object({
       dayPlan: z.array(z.object({
@@ -38,6 +39,14 @@ export const getFinalPlan = async (input: getFinalPlanInput) => {
           description: z.string()
         })
       })).min(input.numberOfDays),
+      planChanges: z.array(z.object({
+        changeType: z.string(), // "reordered", "moved_day", "time_adjusted"
+        activityName: z.string(),
+        originalDay: z.string(),
+        newDay: z.string(),
+        reason: z.string(),
+        explanation: z.string()
+      })).optional()
     }),
     instruction: `
 
@@ -49,15 +58,24 @@ your task is to take this list of activities and organise them day by day with e
 add method of transport as well, add it as an activity only because travel can also take time. the order of the days should be in the order of the arrival and departure time. do not mess up the order of the days.
 Do not write number of day in the title.
 
-DO NOT CHANGE THE ACTIVITIES IN THE LIST. DO NOT ADD OR REMOVE ANY ACTIVITIES. 
+IMPORTANT: If activities that are paired for a single day by the user do not make logical sense to be paired together (e.g., conflicting locations, timing issues, weather dependencies, travel efficiency), you are ALLOWED to:
+1. Change the order of activities within the same day
+2. Move activities to different days if absolutely necessary for logical flow
+3. Keep changes MINIMAL - only make changes when absolutely necessary for a better travel experience
 
-JUST REARRANGE THEM IN THEIR SPECIFIC DAY ITSELF BY TIME
+When you make changes, document them in the "planChanges" array with:
+- changeType: "reordered", "moved_day", "time_adjusted"
+- activityName: the name of the activity that was changed
+- originalDay: what day it was originally on
+- newDay: what day it's now on (or same if just reordered)
+- reason: brief reason (e.g., "travel efficiency", "weather optimization", "logical flow")
+- explanation: detailed explanation of why the change improves the trip
 
 LIST OF ACTIVITIES:${JSON.stringify(input.activities, null, 2)}
 
 structure to follow:
  schema: z.object({
-      activities: z.array(z.object({
+      dayPlan: z.array(z.object({
         title: z.string(),
         activities: z.array(z.object({
           type: z.string(),
@@ -72,13 +90,21 @@ structure to follow:
           high: z.string(),
           description: z.string()
         })
-      }))
+      })),
+      planChanges: z.array(z.object({
+        changeType: z.string(),
+        activityName: z.string(),
+        originalDay: z.string(),
+        newDay: z.string(),
+        reason: z.string(),
+        explanation: z.string()
+      })).optional()
     }),
 type can be food, activity, transport
 
 make sure to count the number of days based on the arrival and departure time
 `,
-    prompt: `Arrival city: ${input.arrivalCityName}, Departure time: ${input.departureTime}, Arrival time: ${input.arrivalTime}, Hotel name: ${input.hotelName}, Hotel latitude: ${input.hotelLatitude}, Hotel longitude: ${input.hotelLongitude}, Interests: ${input.interests}, Number of children: ${input.numberOfChildren}, Number of adults: ${input.numberOfAdults}`,
+    prompt: `Arrival city: ${input.arrivalCityName}, Departure time: ${input.departureTime}, Arrival time: ${input.arrivalTime}, Hotel name: ${input.hotelName}, Hotel latitude: ${input.hotelLatitude}, Hotel longitude: ${input.hotelLongitude}, Interests: ${input.interests}, Number of children: ${input.numberOfChildren}, Number of adults: ${input.numberOfAdults}, Activities: ${JSON.stringify(input.activities, null, 2)}`,
   });
   
   return response;

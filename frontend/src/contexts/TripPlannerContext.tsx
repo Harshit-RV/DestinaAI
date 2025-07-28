@@ -1,4 +1,4 @@
-import { FlightData } from '@/pages/ChooseFlight';
+import { FlightData } from '@/types/flight';
 import { Hotel } from '@/types/hotel';
 import { createContext, useContext, useState, ReactNode, SetStateAction, Dispatch } from 'react';
 
@@ -21,6 +21,15 @@ interface DayPlan {
   title: string;
   activities: Activity[];
   weather_forcast: WeatherForecast;
+}
+
+interface PlanChange {
+  changeType: string;
+  activityName: string;
+  originalDay: string;
+  newDay: string;
+  reason: string;
+  explanation: string;
 }
 
 const defaultDayPlan: DayPlan[] = [
@@ -469,6 +478,9 @@ interface TripPlannerContextType {
   // Day plans
   dayPlan: DayPlan[];
 
+  // Plan changes made by AI
+  planChanges: PlanChange[];
+
   // Destination city common name
   destinationCityCommonName: string;
     
@@ -488,9 +500,10 @@ interface TripPlannerContextType {
   setSelectedOutboundFlight: Dispatch<SetStateAction<FlightData | null>>;
   setSelectedReturnFlight: Dispatch<SetStateAction<FlightData | null>>;
   setDestinationArrivalTime: Dispatch<SetStateAction<string>>;
-  setSelectedHotel: Dispatch<SetStateAction<Hotel>>;
+  setSelectedHotel: Dispatch<SetStateAction<Hotel | null>>;
   setDestinationCityCommonName: Dispatch<SetStateAction<string>>;
   setDayPlan: Dispatch<SetStateAction<DayPlan[]>>;
+  setPlanChanges: Dispatch<SetStateAction<PlanChange[]>>;
   setReturnDateTime:  Dispatch<SetStateAction<string>>
 }
 
@@ -531,6 +544,7 @@ export function TripPlannerProvider({ children }: { children: ReactNode }) {
   const [destinationCityCommonName, setDestinationCityCommonName] = useState('');
   const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
   const [dayPlan, setDayPlan] = useState<DayPlan[]>(defaultDayPlan);
+  const [planChanges, setPlanChanges] = useState<PlanChange[]>([]);
 
   return (
     <TripPlannerContext.Provider
@@ -553,6 +567,7 @@ export function TripPlannerProvider({ children }: { children: ReactNode }) {
         destinationArrivalTime,
         destinationCityCommonName,
         dayPlan,
+        planChanges,
         returnDateTime,
         setDepartureLocation,
         setArrivalLocation,
@@ -572,6 +587,7 @@ export function TripPlannerProvider({ children }: { children: ReactNode }) {
         setDestinationArrivalTime,
         setDestinationCityCommonName,
         setDayPlan,
+        setPlanChanges,
         setReturnDateTime
       }}
     >

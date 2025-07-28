@@ -22,6 +22,7 @@ const PlanYourTrip = () => {
     numberOfChildren,
     numberOfAdults,
     setDayPlan,
+    setPlanChanges,
   } = useTripPlanner();
 
   const fetchActivities = async () => {
@@ -106,6 +107,12 @@ const PlanYourTrip = () => {
       
       if (data.parsed && data.parsed.dayPlan) {
         setDayPlan(data.parsed.dayPlan);
+        // Store plan changes if they exist
+        if (data.parsed.planChanges) {
+          setPlanChanges(data.parsed.planChanges);
+        } else {
+          setPlanChanges([]); // Clear any previous changes
+        }
         navigate('/trip-summary');
       }
       

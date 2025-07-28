@@ -6,7 +6,7 @@ import ChooseHotel from './pages/ChooseHotel';
 import TripSummary from './pages/TripSummary';
 import Signin from "./pages/Signin";
 import Signup from "./pages/Signup";
-import { SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
+import { SignedIn, UserButton } from "@clerk/clerk-react";
 import TripPlanner from "./pages/TripPlanner";
 import NavBarItem from "@/components/navbar-item";
 import PlanYourTrip from './pages/PlanYourTrip';
