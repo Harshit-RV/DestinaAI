@@ -409,7 +409,7 @@ export async function getHotelsOffersByCity(props: HotelsOffersByCity): Promise<
         const hotelData: AmadeusHotelOffer[] = response.data.data;
         return hotelData;
     } catch (error) {
-        console.error('Error fetching hotel offers from Amadeus');
+        console.error('Error fetching hotel offers from Amadeus', error);
         throw new Error('Failed to fetch hotel offers from Amadeus API');
     }
 }

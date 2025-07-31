@@ -20,7 +20,6 @@ interface getFinalPlanInput extends getTripActivitiesInput {
 }
 
 export const getFinalPlan = async (input: getFinalPlanInput) => {
-  console.log({input: JSON.stringify(input, null, 2)})
   const response = await getResponseFromGemini({
     schema: z.object({
       dayPlan: z.array(z.object({
@@ -62,6 +61,8 @@ IMPORTANT: If activities that are paired for a single day by the user do not mak
 1. Change the order of activities within the same day
 2. Move activities to different days if absolutely necessary for logical flow
 3. Keep changes MINIMAL - only make changes when absolutely necessary for a better travel experience
+4. ONLY RETURN planChanges WHEN YOU'VE MADE A CHANGE. DO NOT RETURN DUMMY DATA OR CHANGES LIKE "moved from day 1 to day 1" because it makes no sense.
+5. Activities moved around in their own specific days do not count as a change!
 
 When you make changes, document them in the "planChanges" array with:
 - changeType: "reordered", "moved_day", "time_adjusted"
@@ -111,9 +112,7 @@ make sure to count the number of days based on the arrival and departure time
 }
 
 export const getTripActivities = async (input: getTripActivitiesInput) => {
-  try {
-    console.log("getTripActivities called with input:", JSON.stringify(input, null, 2));
-    
+  try {    
     const response = await getResponseFromGemini({
     schema: z.object({
       activitiesByDays: z.array(z.object({
@@ -148,8 +147,8 @@ Each activity item MUST have:
 - description: string (detailed description)
 
 SPECIAL REQUIREMENTS:
-1. Day 1 MUST start with hotel check-in activity
-2. Last day MUST end with hotel check-out activity
+1. Day 1 MUST start with hotel check-in activity. pack everything like airport transfer, check in, travel to hotel in this one activity.
+2. Last day MUST end with hotel check-out activity. pack everything like airport transfer, check in, travel from hotel in this one activity.
 3. Group related activities with same color (e.g., nearby restaurants, connected attractions)
 4. Individual activities use color "#FFFFFF"
 5. Each day should have 4-8 activities including meals and transport
