@@ -28,8 +28,6 @@ enum PlanningStatus {
 
 const TripPlanner = () => {
 
-  // const { departureLocation, arrivalLocation, departureDate, returnDate, numberOfAdults, numberOfChildren, hotelPreferences, interests, minimumBudget, maximumBudget } = useParams<TripPlannerProps>();
-  
   const [planningStatus, setPlanningStatus] = useState<PlanningStatus>(PlanningStatus.CHOOSE_FLIGHT);
   const [ tripPlannerData, setTripPlannerData ] = useState<TripPlannerProps>({
     departureLocation: "",
@@ -41,17 +39,11 @@ const TripPlanner = () => {
     hotelPreferences: [],
     interests: [],
     minimumBudget: 0,
-    maximumBudget: 0,
+    maximumBudget: 0
   });
 
-  const getAirportCodes = async () => {
-    const response = await fetch(`${API_URL}/util/get-airport-codes?city1=${departureLocation}&city2=${arrivalLocation}`);
-    const data = await response.json();
-    console.log(data);
-  }
-  
+
   if (planningStatus === PlanningStatus.AWAITING_OPENAI_RESPONSE) {
-    getAirportCodes();
     return <div>Awaiting OpenAI response</div>;
   }
 

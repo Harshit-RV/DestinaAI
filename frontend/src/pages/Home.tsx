@@ -96,11 +96,7 @@ function Home() {
         }
       });
 
-      console.log(response);
-
       const { departureCodes, arrivalCodes } = response.data.parsed;
-      console.log({departureCodes, arrivalCodes});
-
       for (const code of departureCodes) {
         if (code.length !== 3) {
           departureCodes.splice(departureCodes.indexOf(code), 1);
@@ -427,7 +423,6 @@ function Home() {
                       ariaLabel={['Lower thumb', 'Upper thumb']}
                       onAfterChange={(value) => {  
                         const newBudget = [...value];
-                        console.log(minimumBudget, maximumBudget);
                         setMinimumBudget(newBudget[0]);
                         setMaximumBudget(newBudget[1]);
                       }}

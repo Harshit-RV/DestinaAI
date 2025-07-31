@@ -44,7 +44,7 @@ const PlanYourTrip = () => {
       const data = await response.json();
 
       const activitiesByDay: KanbanColumn[] = data.parsed.activitiesByDays 
-      console.log({activitiesByDay})
+      // console.log({activitiesByDay})
 
       let filteredActivities = activitiesByDay.map((day, index) => {
         if (index === 0) {
@@ -69,7 +69,7 @@ const PlanYourTrip = () => {
         }
       })
 
-      console.log({filteredActivities})
+      // console.log({filteredActivities})
       setActivities(filteredActivities);
       setLoading(false);
     } catch (error) {
@@ -82,7 +82,7 @@ const PlanYourTrip = () => {
     try {
       setFinalizing(true);
       const activitiesToSend = activities;
-      console.log({activities})
+      // console.log({activities})
       
       const response = await fetch(`${API_URL}/travelplan/finalize-plan`, {
         method: 'POST',

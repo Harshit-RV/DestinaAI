@@ -105,10 +105,6 @@ ${attempt > 0 ? `\n6. RETRY ATTEMPT ${attempt + 1}: Ensure all fields are proper
       // Clean up any markdown formatting that might have slipped through
       text = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
 
-      if (attempt === 0) {
-        console.log("Raw Gemini response:", text.substring(0, 500) + "..."); // Debug logging
-      }
-
       // Parse and validate the JSON response
       let parsedResponse;
       try {

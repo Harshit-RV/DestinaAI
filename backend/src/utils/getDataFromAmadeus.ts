@@ -82,9 +82,7 @@ async function convertPriceToUSD(price: AmadeusPrice): Promise<AmadeusPrice> {
 
     try {
         const convertedBase = await convertToUSD(price.base, price.currency);
-        console.log('converted from', price.currency, 'to', 'USD', convertedBase);
         const convertedTotal = await convertToUSD(price.total, price.currency);
-        console.log('converted from', price.currency, 'to', 'USD', convertedTotal);
 
         // Convert price variations
         const convertedVariations: AmadeusPriceVariations = {
