@@ -1,3 +1,9 @@
+interface HotelCarbonEmissions {
+  daily_emissions: number;
+  total_emissions: number;
+  comparison_rating: 'low' | 'medium' | 'high';
+}
+
 export interface Hotel {
   type: string;
   hotel: {
@@ -11,6 +17,7 @@ export interface Hotel {
   };
   available: boolean;
   photoUrl: string[];
+  carbon_emissions?: HotelCarbonEmissions;
   offers: {
     id: string;
     checkInDate: string;

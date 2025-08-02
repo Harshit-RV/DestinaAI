@@ -54,8 +54,28 @@ export const HotelBox = ({
             </div>
           </div>
 
-          {/* Hotel Info and Price */}
+          {/* Hotel Info, Emissions and Price */}
           <div className="flex w-full md:w-3/5 justify-around py-2 gap-5">
+            {/* Carbon Emissions */}
+            {hotel.carbon_emissions && (
+              <div className="hidden sm:flex flex-col items-center gap-4">
+                <div className="flex flex-col justify-center items-center gap-0"> 
+                  <div className="text-gray-500 text-xs">Carbon</div>
+                  <div className="text-gray-500 text-xs">Emissions</div>
+                </div>
+                <div className={`px-2 py-1 rounded text-xs font-medium ${
+                  hotel.carbon_emissions.comparison_rating === 'low' 
+                    ? 'bg-green-100 text-green-700' 
+                    : hotel.carbon_emissions.comparison_rating === 'high'
+                    ? 'bg-red-100 text-red-700'
+                    : 'bg-yellow-100 text-yellow-700'
+                }`}>
+                  {hotel.carbon_emissions.comparison_rating === 'low' ? 'Eco friendly' : 
+                   hotel.carbon_emissions.comparison_rating === 'high' ? 'High' : 'Medium'}
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-row sm:flex-col justify-between sm:justify-start items-center sm:items-end gap-2 sm:gap-1">
               <div className="text-gray-500 text-center sm:text-right">
                 {/* <div className="text-sm">{hotel.hotel.cityCode}</div> */}
@@ -73,13 +93,30 @@ export const HotelBox = ({
           </div>
         </div>
         
-        {/* Room Features */}
+        {/* Room Features and Mobile Emissions */}
         <div className="w-full md:hidden sm:col-span-full mt-4 sm:mt-5">
           <div className="flex flex-wrap gap-2">
             {firstOffer && (
               <>
                 <span className="bg-gray-100 px-3 py-1.5 rounded-md text-gray-600 text-xs">
                   {firstOffer.guests.adults} Adults
+                </span>
+              </>
+            )}
+            {hotel.carbon_emissions && (
+              <>
+                <span className="bg-gray-100 px-3 py-1.5 rounded-md text-gray-600 text-xs">
+                  {Math.round(hotel.carbon_emissions.total_emissions)}kg CO2
+                </span>
+                <span className={`px-3 py-1.5 rounded-md text-xs font-medium ${
+                  hotel.carbon_emissions.comparison_rating === 'low' 
+                    ? 'bg-green-100 text-green-700' 
+                    : hotel.carbon_emissions.comparison_rating === 'high'
+                    ? 'bg-red-100 text-red-700'
+                    : 'bg-yellow-100 text-yellow-700'
+                }`}>
+                  {hotel.carbon_emissions.comparison_rating === 'low' ? 'Low Impact' : 
+                   hotel.carbon_emissions.comparison_rating === 'high' ? 'High Impact' : 'Medium Impact'}
                 </span>
               </>
             )}

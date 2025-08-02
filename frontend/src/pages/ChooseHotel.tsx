@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import LayoutDiv from "@/components/layout-div";
 import { API_URL } from "@/App";
@@ -7,12 +7,28 @@ import { useTripPlanner } from "@/contexts/TripPlannerContext";
 import { Hotel } from "@/types/hotel";
 import { HotelBox } from "@/components/hotel-box";
 
+interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasMore: boolean;
+}
+
 function ChooseHotel() {
   const navigate = useNavigate();
   const [selectedHotelId, setSelectedHotelId] = useState<string | null>(null);
   const [ hotelData, setHotelData ] = useState<Hotel[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+    hasMore: false
+  });
+  const [currentPage, setCurrentPage] = useState(1);
 
    const {
     selectedOutboundFlight,
@@ -41,10 +57,12 @@ function ChooseHotel() {
     }
   }
 
-  const fetchHotelData = async () => {
+  const fetchHotelData = useCallback(async (page = 1, limit = 10) => {
     try {
       setError(null);
-      setHotelData([]);
+      if (page === 1) {
+        setHotelData([]);  // Clear data only when fetching first page
+      }
       setIsLoading(true);
       const response = await fetch(
         `${API_URL}/travelplan/hotels?` + 
@@ -52,30 +70,51 @@ function ChooseHotel() {
         `checkInDate=${getDateFromAirportTime(selectedOutboundFlight?.flights[selectedOutboundFlight?.flights.length - 1].arrival_airport.time)}&` +
         `checkOutDate=${getDateFromAirportTime(selectedReturnFlight?.flights[0].departure_airport.time)}&` +
         `numberOfAdults=${numberOfAdults}&` +
-        `numberOfChildren=${numberOfChildren}`
+        `numberOfChildren=${numberOfChildren}&` +
+        `page=${page}&` +
+        `limit=${limit}`
       );
       const data = await response.json();
+      
       // Add empty images array to each hotel
       const hotelDataWithImages = data.data.map((hotel: Hotel) => ({
         ...hotel,
         images: [{ type: "" }]
       }));
       setHotelData(hotelDataWithImages);
+      setPagination(data.pagination);
       setIsLoading(false);
     } catch (error) {
       console.error('Error fetching hotels:', error);
       setError(JSON.stringify(error));
       setIsLoading(false);
     }
-  }
+  }, [arrivalAirportCode, selectedOutboundFlight, selectedReturnFlight, numberOfAdults, numberOfChildren]);
 
   const handleContinue = () => {
     navigate('/plan-your-trip');
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    fetchHotelData(page, pagination.limit);
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      handlePageChange(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < pagination.totalPages) {
+      handlePageChange(currentPage + 1);
+    }
+  };
+
   useEffect(() => {
-    fetchHotelData();
-  }, []);
+    fetchHotelData(1, 10);
+  }, [fetchHotelData]);
 
   return (
     <LayoutDiv>
@@ -158,7 +197,7 @@ function ChooseHotel() {
       }
       
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center h-64">
+        <div className="flex flex-col items-center justify-center h-full max-h-[calc(100vh-200px)]">
           <div className="h-10">
             <div role="status">
               <svg aria-hidden="true" className="inline w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -169,22 +208,85 @@ function ChooseHotel() {
           </div>
         </div>
       ) : (
-        <div className="border w-full overflow-scroll overflow-x-hidden max-h-[calc(100vh-200px)]">
-          {hotelData.map((hotel) => (
-            <HotelBox 
-              key={hotel.hotel.hotelId}
-              hotel={hotel}
-              selected={hotel.hotel.hotelId === selectedHotelId}
-              onClick={() => {
-                setSelectedHotelId(hotel.hotel.hotelId)
-                setSelectedHotel(hotel)
-              }}
-            />
-          ))}
-        </div>
+        <>
+          <div className="border w-full overflow-scroll overflow-x-hidden max-h-[calc(100vh-200px)]">
+            {hotelData.map((hotel) => (
+              <HotelBox 
+                key={hotel.hotel.hotelId}
+                hotel={hotel}
+                selected={hotel.hotel.hotelId === selectedHotelId}
+                onClick={() => {
+                  setSelectedHotelId(hotel.hotel.hotelId)
+                  setSelectedHotel(hotel)
+                }}
+              />
+            ))}
+          </div>
+        </>
       )}
 
-      <div className="flex justify-end w-full mt-4">
+      <div className="flex justify-between items-center w-full mt-4">
+        {pagination.totalPages > 1 && (
+          <div className=" bg-red-500 p-2 flex items-center justify-between px-4 py-3 bg-white border border-gray-200 rounded-lg">
+            <div className="flex items-center text-sm text-gray-700">
+              <span>
+                Showing page {currentPage} of {pagination.totalPages} 
+                ({pagination.total} total hotels)
+              </span>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePrevPage}
+                disabled={currentPage === 1 || isLoading}
+                className="px-3 py-1"
+              >
+                Previous
+              </Button>
+              
+              {/* Page numbers */}
+              <div className="flex items-center space-x-1">
+                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (pagination.totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= pagination.totalPages - 2) {
+                    pageNum = pagination.totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handlePageChange(pageNum)}
+                      disabled={isLoading}
+                      className="w-8 h-8 p-0"
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleNextPage}
+                disabled={currentPage === pagination.totalPages || isLoading}
+                className="px-3 py-1"
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
         <Button 
           size={'lg'} 
           className="w-full sm:w-40" 

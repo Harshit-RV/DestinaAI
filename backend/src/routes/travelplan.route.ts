@@ -4,6 +4,7 @@ import config from '../config';
 import { getFlightsData, getReturnFlightsData } from '../utils/getDataFromSerp';
 import { getTripActivities, getFinalPlan } from '../utils/getTripActivities';
 import { getHotelsOffersByCityCode } from '../utils/getDataFromAmadeus';
+import { calculateBatchHotelEmissions } from '../utils/getHotelEmissions';
 const app = Router();
 
 interface TravelPlan {
@@ -205,8 +206,38 @@ app.get('/hotels'  , async (req, res) : Promise<any> => {
       limit: limit ? parseInt(limit) : 10,
     });
 
+    // Calculate number of nights
+    const checkIn = new Date(checkInDate);
+    const checkOut = new Date(checkOutDate);
+    const numberOfNights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 3600 * 24));
+    const totalGuests = parseInt(numberOfAdults) + parseInt(numberOfChildren);
+
+    // Prepare hotel data for batch emissions calculation
+    const hotelInfos = paginatedHotelsData.data.map((hotel: any) => ({
+      hotelId: hotel.hotel.hotelId,
+      hotelName: hotel.hotel.name,
+      roomType: hotel?.offers?.[0]?.room?.type || hotel?.offers?.[0]?.roomInformation?.type,
+      cityCode: hotel.hotel.cityCode
+    }));
+
+    // Calculate emissions for all hotels in one batch call
+    const emissionsResults = await calculateBatchHotelEmissions({
+      hotels: hotelInfos,
+      numberOfNights: numberOfNights,
+      numberOfGuests: totalGuests
+    });
+
+    // Add carbon emissions to each hotel
+    const hotelsWithEmissions = paginatedHotelsData.data.map((hotel: any) => {
+      const emissions = emissionsResults[hotel.hotel.hotelId];
+      return {
+        ...hotel,
+        carbon_emissions: emissions || undefined
+      };
+    });
+
     return res.send({
-      data: paginatedHotelsData.data,
+      data: hotelsWithEmissions,
       pagination: paginatedHotelsData.pagination,
     });
   } catch (error) {

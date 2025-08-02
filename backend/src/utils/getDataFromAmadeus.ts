@@ -338,10 +338,16 @@ interface HotelNamePhotoUrl {
     photoUrl: string[] | null;
 }
 
+interface getHotelsByCityResponse {
+    data: HotelNamePhotoUrl[];
+    numberOfTotalPages: number;
+    totalCount: number;
+}
+
 /**
  * Get hotels by city code using Amadeus API
  */
-export async function getHotelsByCity(props: { cityCode: string, limit: number }): Promise<HotelNamePhotoUrl[]> {
+export async function getHotelsByCity(props: { cityCode: string, page: number, limit: number }): Promise<getHotelsByCityResponse> {
     try {
         const accessToken = await getAmadeusAccessToken();
         
@@ -359,8 +365,10 @@ export async function getHotelsByCity(props: { cityCode: string, limit: number }
         );
 
         const hotelData: AmadeusHotelResponse = response.data;
+        const totalHotels = hotelData.data.length;
+        const numberOfTotalPages = Math.ceil(totalHotels / props.limit);
 
-        const hotelDataFiltered = hotelData.data.slice(0, props.limit);
+        const hotelDataFiltered = hotelData.data.slice(props.page * props.limit, (props.page + 1) * props.limit);
 
         const hotelIds: HotelNamePhotoUrl[] = await Promise.all(hotelDataFiltered.map(async (hotel) => {
             const photoUrl = await getHotelPhotoUrl(hotel.name, hotel.geoCode.latitude, hotel.geoCode.longitude);
@@ -369,7 +377,11 @@ export async function getHotelsByCity(props: { cityCode: string, limit: number }
                 photoUrl: photoUrl 
             };
         }));
-        return hotelIds;
+        return {
+            data: hotelIds,
+            numberOfTotalPages,
+            totalCount: totalHotels
+        };
     } catch (error) {
         console.error('Error fetching hotels from Amadeus');
         throw new Error('Failed to fetch hotels from Amadeus API');
@@ -444,19 +456,18 @@ export async function getHotelsOffersByCityCode(props: HotelsOffersByCityCode): 
         const page = props.page || 1;
         const limit = props.limit || 10;
         
-        // Get all hotel IDs first (we need to know total count for pagination)
-        const allHotelIds = await getHotelsByCity({ cityCode: props.cityCode, limit: limit });
-        const totalCount = allHotelIds.length;
-        const totalPages = Math.ceil(totalCount / limit);
+        // Get hotels for this page (getHotelsByCity already handles pagination)
+        const hotelsByCityResult = await getHotelsByCity({ 
+            cityCode: props.cityCode, 
+            page: page - 1, // Convert to 0-based indexing for getHotelsByCity
+            limit: limit 
+        });
         
-        // Calculate pagination bounds
-        const startIndex = (page - 1) * limit;
-        const endIndex = startIndex + limit;
+        const paginatedHotelIds = hotelsByCityResult.data;
+        const totalPages = hotelsByCityResult.numberOfTotalPages;
+        const totalCount = hotelsByCityResult.totalCount;
         
-        // Get the hotels for this page
-        const paginatedHotelIds = allHotelIds.slice(startIndex, endIndex);
-        
-        // console.log(`Fetching hotels for page ${page}, showing ${paginatedHotelIds.length} hotels (${startIndex + 1}-${Math.min(endIndex, totalCount)} of ${totalCount})`);
+        console.log(`Fetching hotels for page ${page}, showing ${paginatedHotelIds.length} hotels of approximately ${totalCount} total`);
         
         if (paginatedHotelIds.length === 0) {
             return {
