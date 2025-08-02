@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useTripPlanner } from "@/contexts/TripPlannerContext";
 import { useNavigate } from "react-router-dom";
 import LayoutDiv from "@/components/layout-div";
+import { useRef, useState, useEffect } from "react";
 
 function TripSummary() {
   const navigate = useNavigate();
@@ -23,6 +24,10 @@ function TripSummary() {
     planChanges
   } = useTripPlanner();
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       weekday: 'long',
@@ -41,8 +46,74 @@ function TripSummary() {
     });
   }; 
 
+  const updateScrollButtons = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
+    }
+  };
+
+  const scrollLeftFn = () => {
+    if (scrollContainerRef.current) {
+      const cardWidth = 320 + 24; // card width (w-80 = 320px) + gap (gap-6 = 24px)
+      scrollContainerRef.current.scrollBy({ 
+        left: -cardWidth, 
+        behavior: 'smooth' 
+      });
+      setTimeout(updateScrollButtons, 300);
+    }
+  };
+
+  const scrollRightFn = () => {
+    if (scrollContainerRef.current) {
+      const cardWidth = 320 + 24; // card width (w-80 = 320px) + gap (gap-6 = 24px)
+      scrollContainerRef.current.scrollBy({ 
+        left: cardWidth, 
+        behavior: 'smooth' 
+      });
+      setTimeout(updateScrollButtons, 300);
+    }
+  };
+
+  // Initialize scroll button states when component mounts or dayPlan changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateScrollButtons();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [dayPlan]);
+
   return (
     <LayoutDiv className="overflow-y-auto">
+      <style>{`
+        .always-visible-scrollbar::-webkit-scrollbar {
+          width: 12px !important;
+          height: 12px !important;
+          display: block !important;
+        }
+        .always-visible-scrollbar::-webkit-scrollbar-track {
+          background: #f1f5f9 !important;
+          border-radius: 6px !important;
+        }
+        .always-visible-scrollbar::-webkit-scrollbar-thumb {
+          background: #cbd5e1 !important;
+          border-radius: 6px !important;
+        }
+        .always-visible-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8 !important;
+        }
+        .always-visible-scrollbar {
+          scrollbar-width: auto !important;
+          scrollbar-color: #cbd5e1 #f1f5f9 !important;
+        }
+        .force-scrollbar-x {
+          overflow-x: scroll !important;
+        }
+        .force-scrollbar-y {
+          overflow-y: scroll !important;
+        }
+      `}</style>
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row mb-6 sm:mb-8 justify-between w-full items-start sm:items-center gap-4">
@@ -262,67 +333,98 @@ function TripSummary() {
             </div>
             
             <div className="relative">
-              <div className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
-                {dayPlan.map((day, index) => (
-                  <div 
-                    key={index} 
-                    className="flex-none w-80 bg-white rounded-xl shadow-lg border border-gray-200 snap-start overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-                  >
-                    {/* Day Header */}
-                    <div className="bg-gradient-to-r from-[#28666E] to-[#1f4f54] px-6 py-4">
-                      <h3 className="text-xl font-bold text-white mb-1">{day.title}</h3>
-                      <div className="flex items-center gap-2 text-white/90 text-sm">
-                        <span>Day {index + 1}</span>
-                        <span>•</span>
-                        <span>{day.activities.length} activities</span>
-                      </div>
-                    </div>
+              {/* Navigation Buttons */}
+              <button
+                onClick={scrollLeftFn}
+                disabled={!canScrollLeft}
+                className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center transition-all duration-200 ${
+                  canScrollLeft ? 'hover:bg-gray-50 hover:shadow-xl' : 'opacity-50 cursor-not-allowed'
+                }`}
+                style={{ marginLeft: '-24px' }}
+              >
+                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              
+              <button
+                onClick={scrollRightFn}
+                disabled={!canScrollRight}
+                className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center transition-all duration-200 ${
+                  canScrollRight ? 'hover:bg-gray-50 hover:shadow-xl' : 'opacity-50 cursor-not-allowed'
+                }`}
+                style={{ marginRight: '-24px' }}
+              >
+                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
 
-                    {/* Weather Forecast */}
-                    <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
-                      <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
-                        <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        Weather Forecast
-                      </h4>
-                      <div className="grid grid-cols-3 gap-2 text-sm text-blue-700">
-                        <div className="text-center">
-                          <p className="font-medium">High</p>
-                          <p className="text-lg font-bold">{day.weather_forcast.high}</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="font-medium">Low</p>
-                          <p className="text-lg font-bold">{day.weather_forcast.low}</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="font-medium text-xs">{day.weather_forcast.description}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Activities */}
-                    <div className="p-6 max-h-96 overflow-y-auto space-y-4">
-                      {day.activities.map((activity, activityIndex) => (
-                        <div key={activityIndex} className="bg-gray-50 rounded-lg p-4 border border-gray-100 hover:border-gray-200 transition-colors">
-                          <div className="flex justify-between items-start mb-2">
-                            <h5 className="font-semibold text-gray-800 leading-tight">{activity.title}</h5>
-                            <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ml-2">
-                              {activity.estimated_cost}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3 mb-3">
-                            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-medium">
-                              {activity.type}
-                            </span>
-                            <span className="text-gray-600 text-sm">
-                              {activity.start_time} - {activity.end_time}
-                            </span>
-                          </div>
-                          <p className="text-gray-700 text-sm leading-relaxed">{activity.description}</p>
-                        </div>
-                      ))}
+              <div 
+                ref={scrollContainerRef}
+                className="flex gap-6 pb-4 snap-x snap-mandatory always-visible-scrollbar force-scrollbar-x"
+                onScroll={updateScrollButtons}
+              >
+              {dayPlan.map((day, index) => (
+                <div 
+                  key={index} 
+                  className="flex-none w-80 bg-white rounded-xl shadow-lg border border-gray-200 snap-start overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                >
+                  {/* Day Header */}
+                  <div className="bg-gradient-to-r from-[#28666E] to-[#1f4f54] px-6 py-4">
+                    <h3 className="text-xl font-bold text-white mb-1">{day.title}</h3>
+                    <div className="flex items-center gap-2 text-white/90 text-sm">
+                      <span>Day {index + 1}</span>
+                      <span>•</span>
+                      <span>{day.activities.length} activities</span>
                     </div>
                   </div>
-                ))}
+
+                  {/* Weather Forecast */}
+                  <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
+                    <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
+                      <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
+                      Weather Forecast
+                    </h4>
+                    <div className="grid grid-cols-3 gap-2 text-sm text-blue-700">
+                      <div className="text-center">
+                        <p className="font-medium">High</p>
+                        <p className="text-lg font-bold">{day.weather_forcast.high}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="font-medium">Low</p>
+                        <p className="text-lg font-bold">{day.weather_forcast.low}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="font-medium text-xs">{day.weather_forcast.description}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Activities */}
+                  <div className="p-6 max-h-96 space-y-4 always-visible-scrollbar force-scrollbar-y">
+                    {day.activities.map((activity, activityIndex) => (
+                      <div key={activityIndex} className="bg-gray-50 rounded-lg p-4 border border-gray-100 hover:border-gray-200 transition-colors">
+                        <div className="flex justify-between items-start mb-2">
+                          <h5 className="font-semibold text-gray-800 leading-tight">{activity.title}</h5>
+                          <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ml-2">
+                            {activity.estimated_cost}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 mb-3">
+                          <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-medium">
+                            {activity.type}
+                          </span>
+                          <span className="text-gray-600 text-sm">
+                            {activity.start_time} - {activity.end_time}
+                          </span>
+                        </div>
+                        <p className="text-gray-700 text-sm leading-relaxed">{activity.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
               </div>
             </div>
             

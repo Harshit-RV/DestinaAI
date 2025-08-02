@@ -33,7 +33,8 @@ function ChooseHotel() {
 
     if (Number(hours) < 8) {
       const dayPart = date.split('-')[2];
-      const dayBefore = Number(dayPart) - 1;
+      let dayBefore = String(Number(dayPart) - 1);
+      dayBefore = dayBefore.toString().padStart(2, '0');
       return date.split('-')[0] + '-' + date.split('-')[1] + '-' + dayBefore;
     } else {
       return date;

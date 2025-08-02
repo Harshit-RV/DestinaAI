@@ -412,15 +412,7 @@ export async function getHotelsOffersByCity(props: HotelsOffersByCity): Promise<
     }
 }
 
-interface HotelsOffersByCityCode {
-    cityCode: string;
-    limit?: number; 
-    page?: number;  // Add page parameter
-    checkInDate: string;
-    checkOutDate: string;
-    numberOfAdults: number;
-    numberOfChildren: number;
-}
+
 
 // Add pagination response interface
 interface PaginatedHotelOffersResponse {
@@ -434,6 +426,15 @@ interface PaginatedHotelOffersResponse {
     };
 }
 
+interface HotelsOffersByCityCode {
+    cityCode: string;
+    limit?: number; 
+    page?: number;  // Add page parameter
+    checkInDate: string;
+    checkOutDate: string;
+    numberOfAdults: number;
+    numberOfChildren: number;
+}
 /**
  * Get hotel offers by city code (fetches hotel IDs first, then gets offers) with pagination
  */
