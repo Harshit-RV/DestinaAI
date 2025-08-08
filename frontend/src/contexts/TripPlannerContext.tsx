@@ -2,7 +2,7 @@ import { FlightData } from '@/types/flight';
 import { Hotel } from '@/types/hotel';
 import { createContext, useContext, useState, ReactNode, SetStateAction, Dispatch } from 'react';
 
-interface Activity {
+export interface Activity {
   type: string;
   start_time: string;
   end_time: string;
@@ -17,7 +17,7 @@ interface WeatherForecast {
   description: string;
 }
 
-interface DayPlan {
+export interface DayPlan {
   title: string;
   activities: Activity[];
   weather_forcast: WeatherForecast;

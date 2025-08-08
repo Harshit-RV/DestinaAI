@@ -48,7 +48,7 @@ function App() {
   return (
     <TripPlannerProvider>
       <div className="h-screen flex w-full bg-[#F6F6F6]">
-        <div className="w-56 hidden md:flex flex-col py-6 px-3 gap-6">
+        <div className="min-w-56 hidden md:flex flex-col py-6 px-3 gap-6">
           <SignedIn>
             <UserButton/>
           </SignedIn>
@@ -70,9 +70,9 @@ function App() {
             </div>
           </SignedOut>
           <div className="flex flex-col justify-start gap-3 w-full">
-            <NavBarItem title="Home" />
+            <NavBarItem title="Home" path='/'/>
             <SignedIn>
-              <NavBarItem title="Trips" />
+              <NavBarItem title="Trips" path='/trips'/>
             </SignedIn>
           </div>
         </div>
