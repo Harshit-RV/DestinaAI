@@ -3,6 +3,8 @@ import { useTripPlanner } from "@/contexts/TripPlannerContext";
 import { useNavigate } from "react-router-dom";
 import LayoutDiv from "@/components/layout-div";
 import { useRef, useState, useEffect } from "react";
+import { API_URL } from "@/App";
+import { useUser } from "@clerk/clerk-react";
 
 function TripSummary() {
   const navigate = useNavigate();
@@ -21,12 +23,20 @@ function TripSummary() {
     selectedReturnFlight,
     selectedHotel,
     dayPlan,
-    planChanges
+    planChanges,
+    departureAirportCode,
+    arrivalAirportCode,
+    destinationArrivalTime,
+    returnDateTime,
+    destinationCityCommonName
   } = useTripPlanner();
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const { isSignedIn, user, isLoaded } = useUser();
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -84,6 +94,72 @@ function TripSummary() {
     return () => clearTimeout(timer);
   }, [dayPlan]);
 
+  const saveTripToDatabase = async () => {
+    setIsSaving(true);
+    setSaveStatus('idle');
+    
+    try {
+      // TODO: fix this
+      // For now, using a placeholder userId - in a real app, this would come from Clerk auth
+      const userId = user?.id;
+      if (userId == null) {
+        return;
+      }
+      
+      const tripData = {
+        departureLocation,
+        arrivalLocation,
+        departureDate,
+        returnDate,
+        numberOfAdults,
+        numberOfChildren,
+        hotelPreferences,
+        interests,
+        minimumBudget,
+        maximumBudget,
+        selectedOutboundFlight,
+        selectedReturnFlight,
+        selectedHotel,
+        dayPlan,
+        planChanges,
+        departureAirportCode,
+        arrivalAirportCode,
+        destinationArrivalTime,
+        returnDateTime,
+        destinationCityCommonName,
+        userId
+      };
+
+      const response = await fetch(`${API_URL}/users/trips`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(tripData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSaveStatus('success');
+        console.log('Trip saved successfully with ID:', result.tripId);
+      } else {
+        setSaveStatus('error');
+        console.error('Failed to save trip:', result.error);
+      }
+    } catch (error) {
+      setSaveStatus('error');
+      console.error('Error saving trip:', error);
+    } finally {
+      setIsSaving(false);
+      
+      // Reset status after 3 seconds
+      setTimeout(() => {
+        setSaveStatus('idle');
+      }, 3000);
+    }
+  };
+
   return (
     <LayoutDiv className="overflow-y-auto">
       <style>{`
@@ -122,8 +198,44 @@ function TripSummary() {
             <Button variant="outline" onClick={() => navigate('/')} className="bg-white">
               Start Over
             </Button>
-            <Button onClick={() => console.log('Booking confirmed!')} className="bg-[#28666E] hover:bg-[#1f4f54]">
-              Confirm Booking
+            <Button 
+              onClick={saveTripToDatabase} 
+              disabled={isSaving}
+              className={`${
+                saveStatus === 'success' 
+                  ? 'bg-green-600 hover:bg-green-700' 
+                  : saveStatus === 'error'
+                  ? 'bg-red-600 hover:bg-red-700'
+                  : 'bg-[#28666E] hover:bg-[#1f4f54]'
+              } transition-colors duration-200`}
+            >
+              {isSaving ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Saving...
+                </div>
+              ) : saveStatus === 'success' ? (
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Saved Successfully!
+                </div>
+              ) : saveStatus === 'error' ? (
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Save Failed
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                  </svg>
+                  Save Trip
+                </div>
+              )}
             </Button>
           </div>
         </div>

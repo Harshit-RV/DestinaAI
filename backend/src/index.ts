@@ -8,9 +8,10 @@ import { createClient } from '@supabase/supabase-js'
 import config from './config';
 import { getHotelPhotoUrl } from './utils/google-maps';
 import { getTripActivities } from './utils/getTripActivities';
+import { Database } from './supabase';
 
 // Create a single supabase client for interacting with your database
-const supabase = createClient(config.supabaseUrl, config.supabaseApiKey)
+const supabase = createClient<Database>(config.supabaseUrl, config.supabaseApiKey)
 
 const app = express();
 
