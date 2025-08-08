@@ -449,7 +449,41 @@ function TripSummary() {
         </div>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
-
+      
+      <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Sign in required</DialogTitle>
+            <DialogDescription>
+              You need to sign in to save your trip. Don't worry, your trip details will be preserved!
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-start">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShowAuthDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                setShowAuthDialog(false);
+                navigate('/sign-in', { 
+                  state: { 
+                    redirectTo: '/trip-summary',
+                    preserveTripData: true 
+                  } 
+                });
+              }}
+              className="bg-[#28666E] hover:bg-[#1f4f54]"
+            >
+              Sign In
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </LayoutDiv>
   )
 }
