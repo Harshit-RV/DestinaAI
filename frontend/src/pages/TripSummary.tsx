@@ -5,6 +5,14 @@ import LayoutDiv from "@/components/layout-div";
 import { useRef, useState, useEffect } from "react";
 import { API_URL } from "@/App";
 import { useUser } from "@clerk/clerk-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 function TripSummary() {
   const navigate = useNavigate();
@@ -36,7 +44,8 @@ function TripSummary() {
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const { isSignedIn, user, isLoaded } = useUser();
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const { isSignedIn, user } = useUser();
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -94,15 +103,23 @@ function TripSummary() {
     return () => clearTimeout(timer);
   }, [dayPlan]);
 
+  const handleSaveTrip = () => {
+    if (!isSignedIn) {
+      setShowAuthDialog(true);
+      return;
+    }
+    saveTripToDatabase();
+  };
+
   const saveTripToDatabase = async () => {
     setIsSaving(true);
     setSaveStatus('idle');
     
     try {
-      // TODO: fix this
-      // For now, using a placeholder userId - in a real app, this would come from Clerk auth
       const userId = user?.id;
       if (userId == null) {
+        setSaveStatus('error');
+        console.error('User not authenticated');
         return;
       }
       
@@ -199,7 +216,7 @@ function TripSummary() {
               Start Over
             </Button>
             <Button 
-              onClick={saveTripToDatabase} 
+              onClick={handleSaveTrip} 
               disabled={isSaving}
               className={`${
                 saveStatus === 'success' 
@@ -517,9 +534,9 @@ function TripSummary() {
                   <div className="p-6 max-h-96 space-y-4 always-visible-scrollbar force-scrollbar-y">
                     {day.activities.map((activity, activityIndex) => (
                       <div key={activityIndex} className="bg-gray-50 rounded-lg p-4 border border-gray-100 hover:border-gray-200 transition-colors">
-                        <div className="flex justify-between items-start mb-2">
+                        <div className="flex flex-col gap-2 justify-between items-start mb-2">
                           <h5 className="font-semibold text-gray-800 leading-tight">{activity.title}</h5>
-                          <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ml-2">
+                          <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-xs font-medium">
                             {activity.estimated_cost}
                           </span>
                         </div>
@@ -553,6 +570,42 @@ function TripSummary() {
           display: none;
         }
       `}</style>
+      
+      {/* Authentication Dialog */}
+      <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Sign in required</DialogTitle>
+            <DialogDescription>
+              You need to sign in to save your trip. Don't worry, your trip details will be preserved!
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-start">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShowAuthDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                setShowAuthDialog(false);
+                navigate('/sign-in', { 
+                  state: { 
+                    redirectTo: '/trip-summary',
+                    preserveTripData: true 
+                  } 
+                });
+              }}
+              className="bg-[#28666E] hover:bg-[#1f4f54]"
+            >
+              Sign In
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </LayoutDiv>
   );
 }
