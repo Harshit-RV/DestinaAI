@@ -15,7 +15,8 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { createOrUpdateUser } from './utils/userHelpers';
 
-export const API_URL = "http://localhost:3000";
+export const API_URL = "https://destinaai-vhxp.onrender.com";
+// export const API_URL = "http://localhost:3000";
 // export const API_URL = "https://z2bt85w1-3000.inc1.devtunnels.ms";
 
 function App() {
