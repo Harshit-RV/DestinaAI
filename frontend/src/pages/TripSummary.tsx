@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Activity, DayPlan, useTripPlanner } from "@/contexts/TripPlannerContext";
 import { useNavigate } from "react-router-dom";
 import LayoutDiv from "@/components/layout-div";
-import { useRef, useState, useEffect, act } from "react";
+import { useRef, useState, useEffect } from "react";
 import { API_URL } from "@/App";
 import { useUser } from "@clerk/clerk-react";
 import {
@@ -41,8 +41,8 @@ function TripSummary() {
   } = useTripPlanner();
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
+  // const [canScrollLeft, setCanScrollLeft] = useState(false);
+  // const [canScrollRight, setCanScrollRight] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [showAuthDialog, setShowAuthDialog] = useState(false);
@@ -68,33 +68,33 @@ function TripSummary() {
 
   const updateScrollButtons = () => {
     if (scrollContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-      setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
+      // const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      // setCanScrollLeft(scrollLeft > 0);
+      // setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
     }
   };
 
-  const scrollLeftFn = () => {
-    if (scrollContainerRef.current) {
-      const cardWidth = 320 + 24; // card width (w-80 = 320px) + gap (gap-6 = 24px)
-      scrollContainerRef.current.scrollBy({ 
-        left: -cardWidth, 
-        behavior: 'smooth' 
-      });
-      setTimeout(updateScrollButtons, 300);
-    }
-  };
+  // const scrollLeftFn = () => {
+  //   if (scrollContainerRef.current) {
+  //     const cardWidth = 320 + 24; // card width (w-80 = 320px) + gap (gap-6 = 24px)
+  //     scrollContainerRef.current.scrollBy({ 
+  //       left: -cardWidth, 
+  //       behavior: 'smooth' 
+  //     });
+  //     setTimeout(updateScrollButtons, 300);
+  //   }
+  // };
 
-  const scrollRightFn = () => {
-    if (scrollContainerRef.current) {
-      const cardWidth = 320 + 24; // card width (w-80 = 320px) + gap (gap-6 = 24px)
-      scrollContainerRef.current.scrollBy({ 
-        left: cardWidth, 
-        behavior: 'smooth' 
-      });
-      setTimeout(updateScrollButtons, 300);
-    }
-  };
+  // const scrollRightFn = () => {
+  //   if (scrollContainerRef.current) {
+  //     const cardWidth = 320 + 24; // card width (w-80 = 320px) + gap (gap-6 = 24px)
+  //     scrollContainerRef.current.scrollBy({ 
+  //       left: cardWidth, 
+  //       behavior: 'smooth' 
+  //     });
+  //     setTimeout(updateScrollButtons, 300);
+  //   }
+  // };
 
   // Initialize scroll button states when component mounts or dayPlan changes
   useEffect(() => {
@@ -341,7 +341,7 @@ function TripSummary() {
                           <p className="text-gray-600 text-sm">{selectedReturnFlight.flights[0].flight_number}</p>
                           <div className="flex sm:hidden items-baseline mt-1 gap-2">
                             <p className="text-gray-500 text-sm ">Price</p>
-                            <p className="font-bold text-md text-green-600">${selectedOutboundFlight.price}</p>
+                            <p className="font-bold text-md text-green-600">${selectedOutboundFlight?.price}</p>
                           </div>
                         </div>
                       </div>

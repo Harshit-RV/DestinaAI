@@ -1,8 +1,5 @@
 import { cn } from '@/lib/utils';
-import { SignedIn, SignedOut } from '@clerk/clerk-react';
 import { type ClassValue } from 'clsx';
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 interface LayoutDivProps {
   children: React.ReactNode;
@@ -19,21 +16,21 @@ const LayoutDiv = ({ children, className }: LayoutDivProps) => {
   );
 };
 
-const RedirectToSignIn = () => {
+// const RedirectToSignIn = () => {
 
-  const navigate = useNavigate();
+//   const navigate = useNavigate();
 
-  const redirect = async () => {
-    await setTimeout(() => navigate("/sign-in"), 2000)
-  }
+//   const redirect = async () => {
+//     await setTimeout(() => navigate("/sign-in"), 2000)
+//   }
 
-  useEffect(() => {
-    redirect();
-  }, []);
+//   useEffect(() => {
+//     redirect();
+//   }, []);
 
-  return (
-    <>Unauthenticated! Redirecting to sign in page..</>
-  )
-}
+//   return (
+//     <>Unauthenticated! Redirecting to sign in page..</>
+//   )
+// }
 
 export default LayoutDiv; 
