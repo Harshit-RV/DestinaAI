@@ -237,11 +237,11 @@ function Home() {
       <div className="flex mb-4 justify-between w-full items-center">
        
         <h1 className="text-7xl font-black">LET'S TRAVEL</h1>
-        <button>
+        {/* <button>
           <h2 className="bg-gray-200 p-3 text-2xl font-black transform overflow-hidden rounded-lg text-left hover:shadow-xl transition-all sm:w-full sm:max-w-lg">
             User Profile
           </h2>
-        </button>
+        </button> */}
       </div> 
        {/* <Calendar
           mode="single"
