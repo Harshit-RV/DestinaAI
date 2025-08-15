@@ -9,6 +9,10 @@ export interface Activity {
   title: string;
   estimated_cost: string;
   description: string;
+  location?: {
+    lat: number,
+    long: number
+  }
 }
 
 interface WeatherForecast {

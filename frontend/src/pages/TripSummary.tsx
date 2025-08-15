@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import TripMapSimple from "@/components/TripMapSimple";
 
 function TripSummary() {
   const navigate = useNavigate();
@@ -468,6 +469,19 @@ function TripSummary() {
           </div>
       </div>
 
+      <div className="mb-2 mt-4 w-full flex flex-col items-start">
+        <h2 className="text-2xl sm:text-3xl font-black mb-2">Trip Overview Map</h2>
+        <p className="text-gray-600">Interactive map showing all your planned activities</p>
+      </div>
+      
+      {/* Trip Map Component */}
+      <div className="mb-8 w-full">
+        <div>
+          <TripMapSimple dayPlans={dayPlan} height="300px" />
+        </div>
+      
+      </div>
+
       <div className="mb-6 w-full flex flex-col items-start">
         <h2 className="text-2xl sm:text-3xl font-black mb-2">Your Itinerary</h2>
         <p className="text-gray-600">Scroll through your day-by-day adventure</p>
@@ -545,6 +559,7 @@ const ActivityCard = ({
           {activity.start_time} - {activity.end_time}
         </span>
       </div>
+      {/* <div>lat: {activity?.location?.lat}, long: {activity?.location?.long}</div> */}
       <p className="text-gray-700 text-sm leading-relaxed">{activity.description}</p>
     </div>
   )

@@ -31,6 +31,10 @@ export const getFinalPlan = async (input: getFinalPlanInput) => {
           title: z.string(),
           estimated_cost: z.string(),
           description: z.string(),
+          location: z.object({
+            lat: z.number(),
+            long: z.number()
+          })
         })),
         weather_forcast: z.object({
           low: z.string(),
@@ -57,6 +61,8 @@ your task:
 your task is to take this list of activities and organise them day by day with estimated prices and in efficient order of travel. include places to eat, hang around, view, and everyone beyond
 add method of transport as well, add it as an activity only because travel can also take time. the order of the days should be in the order of the arrival and departure time. do not mess up the order of the days.
 Do not write number of day in the title.
+
+For each activitiy, return the latitude and longitude of the location as well! If exact coordinates are not known, then return estimated coordinates but always return something.
 
 IMPORTANT: If activities that are paired for a single day by the user do not make logical sense to be paired together (e.g., conflicting locations, timing issues, weather dependencies, travel efficiency), you are ALLOWED to:
 1. Change the order of activities within the same day
@@ -89,21 +95,26 @@ structure to follow:
           title: z.string(),
           estimated_cost: z.string(),
           description: z.string(),
+          location: z.object({
+            lat: z.number(),
+            long: z.number()
+          })
         })),
         weather_forcast: z.object({
           low: z.string(),
           high: z.string(),
           description: z.string()
         })
-      })),
+      })).min(input.numberOfDays),
       planChanges: z.array(z.object({
-        changeType: z.string(),
+        changeType: z.string(), // "reordered", "moved_day", "time_adjusted"
         activityName: z.string(),
         originalDay: z.string(),
         newDay: z.string(),
         reason: z.string(),
         explanation: z.string()
-      })).optional()
+      })).optional(),
+      totalCarbonEmission: z.string(),
     }),
 type can be food, activity, transport
 
