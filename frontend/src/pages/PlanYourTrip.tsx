@@ -23,6 +23,7 @@ const PlanYourTrip = () => {
     numberOfAdults,
     setDayPlan,
     setPlanChanges,
+    setEstimatedCarbonEmissionFromActivities,
   } = useTripPlanner();
 
   const fetchActivities = async () => {
@@ -107,6 +108,7 @@ const PlanYourTrip = () => {
       
       if (data.parsed && data.parsed.dayPlan) {
         setDayPlan(data.parsed.dayPlan);
+        setEstimatedCarbonEmissionFromActivities(data.parsed.totalCarbonEmission ?? "0 kg of CO2")
         // Store plan changes if they exist
         if (data.parsed.planChanges) {
           setPlanChanges(data.parsed.planChanges);

@@ -10,13 +10,15 @@ import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/clerk-react";
 import TripPlanner from "./pages/TripPlanner";
 import NavBarItem from "@/components/navbar-item";
 import PlanYourTrip from './pages/PlanYourTrip';
+import Trips from './pages/Trips';
+import SavedTripSummary from './pages/SavedTripSummary';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { createOrUpdateUser } from './utils/userHelpers';
 
-export const API_URL = "https://destinaai-vhxp.onrender.com";
-// export const API_URL = "http://localhost:3000";
+// export const API_URL = "https://destinaai-vhxp.onrender.com";
+export const API_URL = "http://localhost:3000";
 // export const API_URL = "https://z2bt85w1-3000.inc1.devtunnels.ms";
 
 function App() {
@@ -79,6 +81,8 @@ function App() {
         </div>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/trips" element={<Trips />} />
+          <Route path="/saved-trip-summary" element={<SavedTripSummary />} />
           <Route path="/choose-flight" element={<ChooseFlight type="outbound" />} />
           <Route path="/choose-return-flight" element={<ChooseFlight type="return" />} />
           <Route path="/choose-hotel" element={<ChooseHotel />} />

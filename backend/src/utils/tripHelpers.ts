@@ -47,6 +47,7 @@ export interface TripData {
 
   // User ID from Clerk
   userId: string;
+  estimatedCarbonEmissionFromActivities: string;
 }
 
 export async function saveTripToDatabase(tripData: TripData) {
@@ -191,7 +192,8 @@ export async function saveTripToDatabase(tripData: TripData) {
       returnDateTime: tripData.returnDateTime,
       selectedHotel: hotelId,
       selectedOutboundFlight: outboundFlightId,
-      selectedReturnFlight: returnFlightId
+      selectedReturnFlight: returnFlightId,
+      estimatedCarbonEmissionFromActivities: tripData.estimatedCarbonEmissionFromActivities,
     };
 
     const { data: trip, error: tripError } = await supabase

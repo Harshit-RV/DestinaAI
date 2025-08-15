@@ -45,7 +45,8 @@ export const getFinalPlan = async (input: getFinalPlanInput) => {
         newDay: z.string(),
         reason: z.string(),
         explanation: z.string()
-      })).optional()
+      })).optional(),
+      totalCarbonEmission: z.string(),
     }),
     instruction: `
 
@@ -73,6 +74,9 @@ When you make changes, document them in the "planChanges" array with:
 - explanation: detailed explanation of why the change improves the trip
 
 LIST OF ACTIVITIES:${JSON.stringify(input.activities, null, 2)}
+
+Also return the estimated carbon emission for all activities combined. This would include transport and more.
+FORMAT OF CARBON EMISSION SHOULD BE "X kg of CO2"
 
 structure to follow:
  schema: z.object({

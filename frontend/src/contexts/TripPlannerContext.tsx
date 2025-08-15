@@ -68,6 +68,8 @@ interface TripPlannerContextType {
 
   // Destination city common name
   destinationCityCommonName: string;
+
+  estimatedCarbonEmissionFromActivities: string;
     
   // Setters
   setDepartureLocation: Dispatch<SetStateAction<string>>;
@@ -89,7 +91,8 @@ interface TripPlannerContextType {
   setDestinationCityCommonName: Dispatch<SetStateAction<string>>;
   setDayPlan: Dispatch<SetStateAction<DayPlan[]>>;
   setPlanChanges: Dispatch<SetStateAction<PlanChange[]>>;
-  setReturnDateTime:  Dispatch<SetStateAction<string>>
+  setReturnDateTime:  Dispatch<SetStateAction<string>>;
+  setEstimatedCarbonEmissionFromActivities: Dispatch<SetStateAction<string>>
 }
 
 const TripPlannerContext = createContext<TripPlannerContextType | undefined>(undefined);
@@ -131,6 +134,7 @@ export function TripPlannerProvider({ children }: { children: ReactNode }) {
   const [dayPlan, setDayPlan] = useState<DayPlan[]>([]);
   const [planChanges, setPlanChanges] = useState<PlanChange[]>([]);
   const [gotFromLocalStorage, setGotFromLocalStorage] = useState(false);
+  const [estimatedCarbonEmissionFromActivities, setEstimatedCarbonEmissionFromActivities] = useState("");
 
   // Load data from localStorage on initial mount
   useEffect(() => {
@@ -238,6 +242,7 @@ export function TripPlannerProvider({ children }: { children: ReactNode }) {
         dayPlan,
         planChanges,
         returnDateTime,
+        estimatedCarbonEmissionFromActivities,
         setDepartureLocation,
         setArrivalLocation,
         setDepartureDate,
@@ -257,7 +262,8 @@ export function TripPlannerProvider({ children }: { children: ReactNode }) {
         setDestinationCityCommonName,
         setDayPlan,
         setPlanChanges,
-        setReturnDateTime
+        setReturnDateTime,
+        setEstimatedCarbonEmissionFromActivities
       }}
     >
       {children}

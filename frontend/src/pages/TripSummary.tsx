@@ -37,6 +37,7 @@ function TripSummary() {
     arrivalAirportCode,
     destinationArrivalTime,
     returnDateTime,
+    estimatedCarbonEmissionFromActivities,
     destinationCityCommonName
   } = useTripPlanner();
 
@@ -410,6 +411,37 @@ function TripSummary() {
                         {interest}
                       </span>
                     ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+              <div className="bg-gray-100 px-6 py-4 border-b">
+                <h3 className="text-lg font-bold text-gray-800">Estimated Carbon Emissions</h3>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="flex items-center gap-2">
+                  <p className="text-gray-600 font-medium">Hotel</p>
+                  <div className="flex flex-wrap gap-2">
+                      <span  className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                        {selectedHotel?.carbon_emissions?.total_emissions} kg of CO2
+                      </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <p className="text-gray-600 font-medium">Flights</p>
+                  <div className="flex flex-wrap gap-2">
+                      <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                        {(Number(selectedOutboundFlight?.carbon_emissions.this_flight ?? 0)  + Number(selectedReturnFlight?.carbon_emissions.this_flight ?? 0)) / 1000} kg of CO2
+                      </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <p className="text-gray-600 font-medium">Activities</p>
+                  <div className="flex flex-wrap gap-2">
+                      <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                        {estimatedCarbonEmissionFromActivities}
+                      </span>
                   </div>
                 </div>
               </div>
